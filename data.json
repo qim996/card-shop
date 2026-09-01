@@ -8,7 +8,7 @@
     "cloud": {
       "url": "https://spb-bb2clztjhaetzzkw.supabase.opentrust.net",
       "key": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiYW5vbiIsInJlZiI6InNwYi1iYjJjbHp0amhhZXR6emt3IiwiaXNzIjoic3VwYWJhc2UiLCJpYXQiOjE3ODgyNzY3MjEsImV4cCI6MjEwMzg1MjcyMX0.M30nOka-bGineKYnZ-KEZgc9pfTzfwptW8uJBgfD9BU",
-: "kv"
+      "table": "kv"
     }
   },
   "goods": [
