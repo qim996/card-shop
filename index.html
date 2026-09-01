@@ -171,6 +171,12 @@
   }
   .icon-btn:hover{background:var(--surface-2);color:var(--ink)}
   .modal-body{padding:20px}
+  .confirm-ico{
+    width:48px;height:48px;margin:0 auto 14px;border-radius:50%;
+    background:#FBE9E7;color:var(--danger);
+    display:flex;align-items:center;justify-content:center;
+    font-size:22px;font-weight:900;line-height:1;
+  }
   /* ===== 结算 ===== */
   .bill-row{display:flex;justify-content:space-between;padding:7px 0;font-size:14px;color:var(--ink-2)}
   .bill-row.total{color:var(--ink);font-weight:700;font-size:15px;border-top:1px dashed var(--line);margin-top:8px;padding-top:12px}
@@ -447,6 +453,18 @@
     </div>
   </div>
 </div>
+<div class="mask" id="confirmMask">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-body" style="text-align:center;padding:28px 24px">
+      <div class="confirm-ico">!</div>
+      <p id="confirmText" style="margin-bottom:22px;line-height:1.8;color:var(--ink-2);font-size:14px"></p>
+      <div style="display:flex;gap:10px">
+        <button class="btn ghost block" id="confirmNo">取消</button>
+        <button class="btn danger block" id="confirmYes">确认</button>
+      </div>
+    </div>
+  </div>
+</div>
 <div class="toast" id="toast"></div>
 <script>
 "use strict";
@@ -483,6 +501,14 @@ function copyText(txt){
 const money = c => '¥' + fmtY(c);
 function openMask(m){ m.classList.add('open'); }
 function closeMask(m){ m.classList.remove('open'); }
+/* ---------- 通用确认弹窗（替代原生 confirm） ---------- */
+let confirmCb = null;
+function confirmDialog(msg, cb, btnLabel){
+  $('#confirmText').textContent = msg;
+  $('#confirmYes').textContent = btnLabel || '确认';
+  confirmCb = cb;
+  openMask($('#confirmMask'));
+}
 /* ---------- 图标 ---------- */
 const IC = {
   key: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.6 7.6a5.5 5.5 0 1 1-7.78 7.78 5.5 5.5 0 0 1 7.78-7.78zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>',
@@ -974,9 +1000,11 @@ function bindAdminEvents(){
     const del = e.target.closest('[data-del]');
     if(del){
       const g = store.goods.find(x=>x.id===del.dataset.del);
-      if(g && confirm('确定删除商品「'+g.name+'」及其剩余卡密？')){
-        store.goods = store.goods.filter(x=>x.id!==g.id);
-        saveStore(); renderAdmin('goods'); toast('已删除');
+      if(g){
+        confirmDialog('确定删除商品「'+g.name+'」及其剩余卡密？', ()=>{
+          store.goods = store.goods.filter(x=>x.id!==g.id);
+          saveStore(); renderAdmin('goods'); toast('已删除');
+        }, '确认删除');
       }
       return;
     }
@@ -1042,10 +1070,13 @@ function bindAdminEvents(){
       return;
     }
     const rs = e.target.closest('#sReset');
-    if(rs && confirm('将恢复为演示数据，当前商品/卡密/订单将被覆盖，确定？')){
-      localStorage.removeItem(STORE_KEY);
-      store = seedStore(); saveStore();
-      renderAdmin('settings'); toast('已恢复演示数据');
+    if(rs){
+      confirmDialog('将恢复为演示数据，当前商品/卡密/订单将被覆盖，确定？', ()=>{
+        localStorage.removeItem(STORE_KEY);
+        store = seedStore(); saveStore();
+        renderAdmin('settings'); toast('已恢复演示数据');
+      }, '确认恢复');
+      return;
     }
   });
 }
@@ -1090,6 +1121,9 @@ function bindGlobal(){
     }
   };
   $('#pwdInput').addEventListener('keydown', e=>{ if(e.key==='Enter') $('#pwdOk').click(); });
+  // 通用确认弹窗按钮（不允许点击空白关闭，避免误触）
+  $('#confirmNo').onclick = ()=>closeMask($('#confirmMask'));
+  $('#confirmYes').onclick = ()=>{ closeMask($('#confirmMask')); if(confirmCb) confirmCb(); };
   // 密码弹层不允许点击空白关闭，必须验证口令
   ['checkoutMask','payMask','resultMask'].forEach(id=>{
     $('#'+id).addEventListener('click', e=>{ if(e.target===$('#'+id)) closeMask($('#'+id)); });
