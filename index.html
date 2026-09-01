@@ -330,9 +330,9 @@
       <span class="brand-name" id="brandName">卡铺<small>自动发卡</small></span>
     </a>
     <nav class="topnav">
-      <a href="#/" data-nav="home">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg>
-        <span>首页</span>
+      <a href="#/order" data-nav="order">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        <span>订单查询</span>
       </a>
       <a href="#/admin" data-nav="admin">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
@@ -377,6 +377,27 @@
       <button class="admin-tab" data-atab="settings">设置</button>
     </div>
     <div id="adminBody"></div>
+  </section>
+  <!-- ===== 订单查询页 ===== -->
+  <section data-route="order">
+    <div class="hero">
+      <h1>订单查询</h1>
+      <p>输入订单号，查询购买记录与卡密信息。</p>
+      <span class="hero-badge"><span class="dot"></span>数据存储于本机浏览器</span>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h3>查询订单</h3></div>
+      <div class="field">
+        <label>订单号</label>
+        <input id="orderInput" placeholder="例如：FK202609010917544064" autocomplete="off">
+      </div>
+      <button class="btn block" id="orderSearch">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        查询
+      </button>
+      <p class="hint" style="margin-top:12px">下单成功后生成的订单号可在购买记录或支付弹窗中查看。</p>
+    </div>
+    <div id="orderResult" style="margin-top:16px"></div>
   </section>
   <div class="foot">卡铺自动发卡 · 纯前端静态部署 · 数据保存在本机浏览器</div>
 </main>
@@ -632,7 +653,10 @@ function scheduleCloudPush(){
   cloudTimer = setTimeout(()=>{ cloudPush().then(ok=>{ if(!ok) toast('云同步失败，请检查云配置'); }); }, 800);
 }
 function refresh(){
-  if(location.hash.startsWith('#/admin')){ if(requireAdmin()) renderAdmin(); }
+  const h = location.hash || '#/';
+  const route = h.split('?')[0].slice(2) || 'home';
+  if(route==='admin'){ if(requireAdmin()) renderAdmin(); }
+  else if(route==='order'){ renderOrder(); }
   else renderHome();
 }
 async function initCloud(){
@@ -669,9 +693,40 @@ function router(){
     a.classList.toggle('active', target===route);
   });
   if(route==='admin'){ ensureAdmin(); }
+  else if(route==='order'){ renderOrder(); }
   else { renderHome(); }
 }
 window.addEventListener('hashchange', router);
+/* ---------- 订单查询 ---------- */
+function renderOrder(){
+  // 页面为静态结构，路由切换时无需额外渲染
+}
+function doOrderSearch(){
+  const no = $('#orderInput').value.trim();
+  const box = $('#orderResult');
+  if(!no){ toast('请输入订单号'); return; }
+  const o = store.orders.find(x=>x.no===no);
+  if(!o){
+    box.innerHTML = '<div class="panel"><div class="empty-mini">未找到该订单，请核对订单号。</div></div>';
+    return;
+  }
+  box.innerHTML = `
+    <div class="panel">
+      <div class="panel-head">
+        <h3>订单详情</h3>
+        ${o.cards && o.cards.length ? '<button class="btn ghost sm" id="orderCopyAll">' + IC.copy + '复制全部卡密</button>' : ''}
+      </div>
+      <div class="bill-row"><span>订单号</span><span class="num">${esc(o.no)}</span></div>
+      <div class="bill-row"><span>商品</span><span>${esc(o.goodsName)} × ${o.qty}</span></div>
+      <div class="bill-row"><span>实付金额</span><span class="num">¥${fmtY(o.amount)}</span></div>
+      <div class="bill-row"><span>下单时间</span><span class="num">${new Date(o.time).toLocaleString('zh-CN')}</span></div>
+      ${o.cards && o.cards.length ? `<div class="receipt-dash"></div>
+      <div class="card-list">${o.cards.map(c=>`<div class="card-line"><span class="card-code">${esc(c)}</span><button class="copy-mini" data-copy="${esc(c)}">复制</button></div>`).join('')}</div>` : ''}
+    </div>`;
+  const ca = $('#orderCopyAll');
+  if(ca) ca.onclick = ()=>copyText(o.cards.join('\n'));
+  $$('#orderResult [data-copy]').forEach(b=>b.onclick=()=>copyText(b.dataset.copy));
+}
 /* ---------- 首页 ---------- */
 function renderHome(){
   $('#brandName').firstChild.textContent = store.settings.shopName;
@@ -1145,6 +1200,9 @@ function bindGlobal(){
     const b = e.target.closest('[data-copy]');
     if(b) copyText(b.dataset.copy);
   });
+  // 订单查询
+  $('#orderSearch').onclick = doOrderSearch;
+  $('#orderInput').addEventListener('keydown', e=>{ if(e.key==='Enter') doOrderSearch(); });
   $('#pwdOk').onclick = ()=>{
     if($('#pwdInput').value === store.settings.adminPwd){
       adminAuthed = true;
