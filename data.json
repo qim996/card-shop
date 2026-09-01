@@ -160,26 +160,5 @@
         "iMPM8EBXMrnnYjOPL3"
       ]
     }
-  ],
-  "orders": [
-    {
-      "no": "FK202609010917544064",
-      "goodsName": "藤野豆腐店",
-      "qty": 10,
-      "amount": 0.1,
-      "cards": [
-        "nDJId2ZxQWqYxlGCrK",
-        "wCeY8UK1SDMUhqA32f",
-        "6AkGD7Rk0cKpgi3ULp",
-        "zsPS3nUcJ4JgkDyZQ9",
-        "SfcpA8CerLVyGQxqsg",
-        "sMnaqYeQvZcNr3c4Fw",
-        "YZKN5zSU68B6n7NmBF",
-        "A3ZXgS1ScQ9GtGJXpS",
-        "Ic2iXXPecvEG6ZGpB8",
-        "hi7l3knFcViv55eex7"
-      ],
-      "time": 1788254277207
-    }
   ]
 }

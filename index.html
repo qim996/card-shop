@@ -38,6 +38,7 @@
   button{font-family:inherit;cursor:pointer}
   input,textarea,select{font-family:inherit;font-size:14px;color:var(--ink)}
   .num{font-variant-numeric:tabular-nums}
+
   /* ===== 顶栏 ===== */
   .topbar{
     position:sticky;top:0;z-index:40;
@@ -66,8 +67,10 @@
   }
   .topnav a:hover{background:var(--surface-2);color:var(--ink)}
   .topnav a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+
   /* ===== 主容器 ===== */
   .wrap{max-width:1080px;margin:0 auto;padding:28px 20px 64px}
+
   /* ===== Hero ===== */
   .hero{padding:14px 0 30px}
   .hero h1{font-size:30px;font-weight:900;letter-spacing:.5px}
@@ -85,6 +88,7 @@
     padding:6px 14px;font-size:13px;color:var(--ink-2);
   }
   .dot{width:7px;height:7px;border-radius:50%;background:var(--success);display:inline-block}
+
   /* ===== 商品网格 ===== */
   .section-title{
     display:flex;align-items:baseline;justify-content:space-between;
@@ -146,12 +150,14 @@
   .btn.sm{padding:6px 12px;font-size:13px;min-height:34px}
   .btn.danger{background:transparent;color:var(--danger);border:1px solid #F3C8C8}
   .btn.danger:hover{background:#FEF2F2}
+
   /* ===== 空态 ===== */
   .empty{
     text-align:center;padding:56px 20px;color:var(--ink-3);
     background:var(--surface);border:1px dashed var(--line);border-radius:var(--radius);
   }
   .empty strong{display:block;color:var(--ink-2);font-size:15px;margin-top:10px}
+
   /* ===== 弹层 ===== */
   .mask{
     position:fixed;inset:0;z-index:60;
@@ -184,6 +190,7 @@
     display:flex;align-items:center;justify-content:center;
     font-size:22px;font-weight:900;line-height:1;
   }
+
   /* ===== 结算 ===== */
   .bill-row{display:flex;justify-content:space-between;padding:7px 0;font-size:14px;color:var(--ink-2)}
   .bill-row.total{color:var(--ink);font-weight:700;font-size:15px;border-top:1px dashed var(--line);margin-top:8px;padding-top:12px}
@@ -197,6 +204,7 @@
   .qty button:hover{background:#EDF1F2;color:var(--ink)}
   .qty .qty-val{width:52px;text-align:center;font-weight:700;font-size:15px;border:none;background:var(--surface);-moz-appearance:textfield}
   .qty .qty-val::-webkit-outer-spin-button,.qty .qty-val::-webkit-inner-spin-button{-webkit-appearance:none}
+
   /* ===== 支付 ===== */
   .pay-wrap{text-align:center}
   .pay-amount{font-size:34px;font-weight:900;color:var(--primary);letter-spacing:.5px}
@@ -224,6 +232,7 @@
     border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;
   }
   @keyframes spin{to{transform:rotate(360deg)}}
+
   /* ===== 票据结果 ===== */
   .receipt{
     position:relative;text-align:center;
@@ -263,6 +272,7 @@
   }
   .copy-mini:hover{background:#D4E8E4}
   .receipt-foot{font-size:12px;color:var(--ink-3);margin-top:16px}
+
   /* ===== 管理页 ===== */
   .admin-tabs{display:flex;gap:6px;border-bottom:1px solid var(--line);margin-bottom:20px;overflow-x:auto}
   .admin-tab{
@@ -298,6 +308,7 @@
   .seg{display:inline-flex;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:3px}
   .seg button{border:none;background:transparent;padding:7px 14px;border-radius:8px;font-size:13px;color:var(--ink-2);font-weight:600}
   .seg button.active{background:#fff;color:var(--primary);box-shadow:0 1px 3px rgba(15,23,42,.12)}
+
   /* ===== Toast ===== */
   .toast{
     position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);
@@ -306,7 +317,9 @@
     display:flex;align-items:center;gap:8px;max-width:88vw;
   }
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
   .foot{text-align:center;color:var(--ink-3);font-size:12.5px;padding:24px 0 0}
+
   @media (max-width:640px){
     .wrap{padding:20px 16px 56px}
     .hero h1{font-size:24px}
@@ -320,6 +333,7 @@
 </style>
 </head>
 <body>
+
 <!-- ===== 顶栏 ===== -->
 <header class="topbar">
   <div class="topbar-inner">
@@ -341,7 +355,9 @@
     </nav>
   </div>
 </header>
+
 <main class="wrap">
+
   <!-- ===== 首页 ===== -->
   <section data-route="home">
     <div class="hero">
@@ -360,6 +376,7 @@
       <p>请在管理页添加商品与卡密</p>
     </div>
   </section>
+
   <!-- ===== 管理页 ===== -->
   <section data-route="admin">
     <div class="hero">
@@ -378,29 +395,19 @@
     </div>
     <div id="adminBody"></div>
   </section>
+
   <!-- ===== 订单查询页 ===== -->
   <section data-route="order">
     <div class="hero">
-      <h1>订单查询</h1>
-      <p>输入订单号，查询购买记录与卡密信息。</p>
+      <h1>我的订单</h1>
+      <p>本机购买记录与卡密信息，仅保存在当前浏览器。</p>
       <span class="hero-badge"><span class="dot"></span>数据存储于本机浏览器</span>
     </div>
-    <div class="panel">
-      <div class="panel-head"><h3>查询订单</h3></div>
-      <div class="field">
-        <label>订单号</label>
-        <input id="orderInput" placeholder="例如：FK202609010917544064" autocomplete="off">
-      </div>
-      <button class="btn block" id="orderSearch">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-        查询
-      </button>
-      <p class="hint" style="margin-top:12px">下单成功后生成的订单号可在购买记录或支付弹窗中查看。</p>
-    </div>
-    <div id="orderResult" style="margin-top:16px"></div>
+    <div id="orderList"></div>
   </section>
   <div class="foot">卡铺自动发卡 · 纯前端静态部署 · 数据保存在本机浏览器</div>
 </main>
+
 <!-- ===== 结算弹层 ===== -->
 <div class="mask" id="checkoutMask">
   <div class="modal">
@@ -429,6 +436,7 @@
     </div>
   </div>
 </div>
+
 <!-- ===== 支付弹层 ===== -->
 <div class="mask" id="payMask">
   <div class="modal">
@@ -451,6 +459,7 @@
     </div>
   </div>
 </div>
+
 <!-- ===== 发卡结果弹层 ===== -->
 <div class="mask" id="resultMask">
   <div class="modal">
@@ -474,6 +483,7 @@
     </div>
   </div>
 </div>
+
 <!-- ===== 管理口令弹层 ===== -->
 <div class="mask" id="pwdMask">
   <div class="modal">
@@ -491,6 +501,7 @@
     </div>
   </div>
 </div>
+
 <div class="mask" id="confirmMask">
   <div class="modal" style="max-width:380px">
     <div class="modal-body" style="text-align:center;padding:28px 24px">
@@ -503,19 +514,23 @@
     </div>
   </div>
 </div>
+
 <div class="toast" id="toast"></div>
+
 <script>
 "use strict";
 /* =========================================================
    卡铺 · 自动发卡 —— 单文件静态应用
    数据保存在 localStorage；支付支持「演示模式」与「网关模式」
    ========================================================= */
+
 /* ---------- 工具 ---------- */
 const $ = (s, el=document) => el.querySelector(s);
 const $$ = (s, el=document) => Array.from(el.querySelectorAll(s));
 const fmtY = n => n.toFixed(2);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const uid = () => 'FK' + new Date().toISOString().replace(/[-:T]/g,'').slice(0,14) + Math.floor(1000+Math.random()*9000);
+
 function toast(msg){
   const t = $('#toast');
   t.textContent = msg;
@@ -539,6 +554,7 @@ function copyText(txt){
 const money = c => '¥' + fmtY(c);
 function openMask(m){ m.classList.add('open'); }
 function closeMask(m){ m.classList.remove('open'); }
+
 /* ---------- 通用确认弹窗（替代原生 confirm） ---------- */
 let confirmCb = null;
 function confirmDialog(msg, cb, btnLabel){
@@ -547,6 +563,7 @@ function confirmDialog(msg, cb, btnLabel){
   confirmCb = cb;
   openMask($('#confirmMask'));
 }
+
 /* ---------- 图标 ---------- */
 const IC = {
   key: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.6 7.6a5.5 5.5 0 1 1-7.78 7.78 5.5 5.5 0 0 1 7.78-7.78zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>',
@@ -558,6 +575,7 @@ const IC = {
   search:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>',
   download:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>'
 };
+
 /* ---------- 数据 ---------- */
 const STORE_KEY = 'kpu_card_shop_v1';
 function genDemoCards(prefix, n){
@@ -592,6 +610,7 @@ function loadStore(){
     if(!data || !data.goods) return seedStore();
     if(!data.settings) data.settings = seedStore().settings;
     data.settings.cloud = data.settings.cloud || { url:'', key:'', table:'kv' };
+    if(!data.orders) data.orders = [];
     return data;
   }catch(e){ return seedStore(); }
 }
@@ -611,6 +630,7 @@ async function loadRemoteSeed(){
     if(data && data.goods){
       if(!data.settings) data.settings = seedStore().settings;
       data.settings.cloud = data.settings.cloud || { url:'', key:'', table:'kv' };
+      if(!data.orders) data.orders = [];
       store = data;
       saveStore();
       refresh();
@@ -683,6 +703,7 @@ const MORANDI = [
   ['#9FB0B5','#2E3A3D'],
   ['#C2B0A3','#4A3B2E']
 ];
+
 /* ---------- 路由 ---------- */
 function router(){
   const h = location.hash || '#/';
@@ -699,34 +720,31 @@ function router(){
 window.addEventListener('hashchange', router);
 /* ---------- 订单查询 ---------- */
 function renderOrder(){
-  // 页面为静态结构，路由切换时无需额外渲染
-}
-function doOrderSearch(){
-  const no = $('#orderInput').value.trim();
-  const box = $('#orderResult');
-  if(!no){ toast('请输入订单号'); return; }
-  const o = store.orders.find(x=>x.no===no);
-  if(!o){
-    box.innerHTML = '<div class="panel"><div class="empty-mini">未找到该订单，请核对订单号。</div></div>';
+  const box = $('#orderList');
+  const orders = store.orders || [];
+  if(!orders.length){
+    box.innerHTML = '<div class="empty"><strong>本机暂无订单</strong><p>在本机下单成功后，订单与卡密会显示在这里。</p></div>';
     return;
   }
-  box.innerHTML = `
-    <div class="panel">
+  box.innerHTML = orders.map(o=>`
+    <div class="panel" style="margin-bottom:16px">
       <div class="panel-head">
-        <h3>订单详情</h3>
-        ${o.cards && o.cards.length ? '<button class="btn ghost sm" id="orderCopyAll">' + IC.copy + '复制全部卡密</button>' : ''}
+        <h3>${esc(o.goodsName)} × ${o.qty}</h3>
+        ${o.cards && o.cards.length ? `<button class="btn ghost sm" data-oac="${esc(o.no)}">${IC.copy}复制全部卡密</button>` : ''}
       </div>
       <div class="bill-row"><span>订单号</span><span class="num">${esc(o.no)}</span></div>
-      <div class="bill-row"><span>商品</span><span>${esc(o.goodsName)} × ${o.qty}</span></div>
       <div class="bill-row"><span>实付金额</span><span class="num">¥${fmtY(o.amount)}</span></div>
       <div class="bill-row"><span>下单时间</span><span class="num">${new Date(o.time).toLocaleString('zh-CN')}</span></div>
       ${o.cards && o.cards.length ? `<div class="receipt-dash"></div>
       <div class="card-list">${o.cards.map(c=>`<div class="card-line"><span class="card-code">${esc(c)}</span><button class="copy-mini" data-copy="${esc(c)}">复制</button></div>`).join('')}</div>` : ''}
-    </div>`;
-  const ca = $('#orderCopyAll');
-  if(ca) ca.onclick = ()=>copyText(o.cards.join('\n'));
-  $$('#orderResult [data-copy]').forEach(b=>b.onclick=()=>copyText(b.dataset.copy));
+    </div>`).join('');
+  $$('#orderList [data-copy]').forEach(b=>b.onclick=()=>copyText(b.dataset.copy));
+  $$('#orderList [data-oac]').forEach(b=>b.onclick=()=>{
+    const ord = store.orders.find(x=>x.no===b.dataset.oac);
+    if(ord && ord.cards) copyText(ord.cards.join('\n'));
+  });
 }
+
 /* ---------- 首页 ---------- */
 function renderHome(){
   $('#brandName').firstChild.textContent = store.settings.shopName;
@@ -760,6 +778,7 @@ function renderHome(){
     </div>`;
   }).join('');
 }
+
 /* ---------- 结算 ---------- */
 let curGoods = null, curQty = 1;
 function openCheckout(id){
@@ -782,6 +801,7 @@ function setQty(n){
   if(curGoods && n>max && max>=1) toast('当前库存仅 ' + max + ' 张');
   syncCheckout();
 }
+
 /* ---------- 支付 ---------- */
 let curOrder = null, payTimer = null;
 function startPay(){
@@ -877,6 +897,7 @@ function demoQR(seedStr){
   }
   return `<svg viewBox="0 0 ${n} ${n}" shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg">${cells}</svg>`;
 }
+
 /* ---------- 管理页 ---------- */
 let adminAuthed = sessionStorage.getItem('kpu_admin_ok')==='1';
 function requireAdmin(){
@@ -904,6 +925,7 @@ function adminTab(){
   const a = $('.admin-tab.active');
   return a ? a.dataset.atab : 'goods';
 }
+
 function adminGoods(){
   const rows = store.goods.map(g=>`
     <tr>
@@ -961,6 +983,7 @@ function goodsForm(id){
     saveStore(); renderAdmin('goods'); toast(g?'已保存':'已创建');
   };
 }
+
 function adminCards(){
   const sel = store.goods.map(g=>`<option value="${g.id}">${esc(g.name)}（剩余 ${cardsLeft(g)} 张）</option>`).join('');
   return `
@@ -1005,6 +1028,7 @@ function bindCardsPage(){
     $$('#cardDetail [data-copy]').forEach(b=>b.onclick=()=>copyText(b.dataset.copy));
   };
 }
+
 function adminOrders(){
   const rows = store.orders.map(o=>`
     <tr>
@@ -1027,6 +1051,7 @@ function adminOrders(){
     <div id="orderDetail" style="margin-top:16px"></div>
   </div>`;
 }
+
 function adminSettings(){
   const s = store.settings;
   return `
@@ -1076,6 +1101,7 @@ function adminSettings(){
     <p class="hint" style="margin-top:12px">数据保存在当前浏览器的 localStorage 中，清空浏览器数据会丢失。建议定期「导出数据」备份。</p>
   </div>`;
 }
+
 /* ---------- 管理事件绑定（事件委托） ---------- */
 function bindAdminEvents(){
   $$('.admin-tab').forEach(b=>b.onclick=()=>{
@@ -1170,6 +1196,7 @@ function bindAdminEvents(){
     }
   });
 }
+
 /* ---------- 全局事件 ---------- */
 function bindGlobal(){
   $('#goodsGrid').addEventListener('click', e=>{
@@ -1200,9 +1227,7 @@ function bindGlobal(){
     const b = e.target.closest('[data-copy]');
     if(b) copyText(b.dataset.copy);
   });
-  // 订单查询
-  $('#orderSearch').onclick = doOrderSearch;
-  $('#orderInput').addEventListener('keydown', e=>{ if(e.key==='Enter') doOrderSearch(); });
+  // 订单查询页为列表渲染（renderOrder 已随路由触发），无需额外绑定
   $('#pwdOk').onclick = ()=>{
     if($('#pwdInput').value === store.settings.adminPwd){
       adminAuthed = true;
@@ -1226,6 +1251,7 @@ function bindGlobal(){
     $('#'+id).addEventListener('click', e=>{ if(e.target===$('#'+id)) closeMask($('#'+id)); });
   });
 }
+
 /* ---------- 启动 ---------- */
 bindGlobal();
 bindAdminEvents();
