@@ -72,6 +72,13 @@
   .hero{padding:14px 0 30px}
   .hero h1{font-size:30px;font-weight:900;letter-spacing:.5px}
   .hero p{color:var(--ink-2);margin-top:6px;font-size:15px}
+  .back-home{
+    display:inline-flex;align-items:center;gap:6px;margin-top:14px;
+    color:var(--primary);font-size:14px;font-weight:600;text-decoration:none;
+    background:var(--surface);border:1px solid var(--line);border-radius:10px;
+    padding:8px 14px;transition:background .15s;
+  }
+  .back-home:hover{background:var(--primary-soft)}
   .hero-badge{
     display:inline-flex;align-items:center;gap:6px;margin-top:14px;
     background:var(--surface);border:1px solid var(--line);border-radius:999px;
@@ -358,6 +365,10 @@
     <div class="hero">
       <h1>店铺管理</h1>
       <p>管理商品、卡密库存、订单记录与支付设置。</p>
+      <a href="#/" class="back-home">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+        返回首页
+      </a>
     </div>
     <div class="admin-tabs">
       <button class="admin-tab active" data-atab="goods">商品</button>
@@ -445,11 +456,17 @@
 <!-- ===== 管理口令弹层 ===== -->
 <div class="mask" id="pwdMask">
   <div class="modal">
-    <div class="modal-head"><h3>管理口令</h3></div>
+    <div class="modal-head">
+      <h3>管理口令</h3>
+      <button class="icon-btn" id="pwdClose" title="返回首页">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
     <div class="modal-body">
       <p class="hint" style="margin-bottom:12px">进入管理页需要口令，可在设置页修改或清空。</p>
       <div class="field"><input type="password" id="pwdInput" placeholder="请输入管理口令" autocomplete="off"></div>
       <button class="btn block" id="pwdOk">进入管理</button>
+      <button class="btn ghost block" id="pwdBack" style="margin-top:10px">返回首页</button>
     </div>
   </div>
 </div>
@@ -1139,6 +1156,10 @@ function bindGlobal(){
     }
   };
   $('#pwdInput').addEventListener('keydown', e=>{ if(e.key==='Enter') $('#pwdOk').click(); });
+  // 口令弹窗可直接关闭并返回首页（不输入口令也能退出）
+  function pwdBackHome(){ closeMask($('#pwdMask')); location.hash = '#/'; }
+  $('#pwdClose').onclick = pwdBackHome;
+  $('#pwdBack').onclick = pwdBackHome;
   // 通用确认弹窗按钮（不允许点击空白关闭，避免误触）
   $('#confirmNo').onclick = ()=>closeMask($('#confirmMask'));
   $('#confirmYes').onclick = ()=>{ closeMask($('#confirmMask')); if(confirmCb) confirmCb(); };
