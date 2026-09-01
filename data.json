@@ -6,8 +6,8 @@
     "gatewayUrl": "",
     "adminPwd": "qim996",
     "cloud": {
-      "url": "",
-      "key": "",
+      "url": "https://gincsexupxkqbhllsosocay.supabase.co",
+      "key": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdpbmNzZXh1cHhrcWJobHNvY2F5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgyNTA3ODgsImV4cCI6MjEwMzgyNjc4OH0.IdRVOjc3WHmoN6iT_YJ4k5b6Dp-ye3DRvacYmu0ZkCc",
       "table": "kv"
     }
   },

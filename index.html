@@ -622,15 +622,30 @@ function saveStore(){
    仅当本机从未保存过数据时，拉取仓库里的 data.json 作为初始数据。
    实现「手动同步」：你改完数据后导出 → 更新仓库 data.json → 其他设备首次打开即为最新数据。 */
 async function loadRemoteSeed(){
-  if(localStorage.getItem(STORE_KEY)) return;
   try{
     const r = await fetch('data.json', { cache:'no-cache' });
     if(!r.ok) return;
     const data = await r.json();
-    if(data && data.goods){
-      if(!data.settings) data.settings = seedStore().settings;
-      data.settings.cloud = data.settings.cloud || { url:'', key:'', table:'kv' };
-      if(!data.orders) data.orders = [];
+    if(!data || !data.goods) return;
+    if(!data.settings) data.settings = seedStore().settings;
+    data.settings.cloud = data.settings.cloud || { url:'', key:'', table:'kv' };
+    if(!data.orders) data.orders = [];
+    const raw = localStorage.getItem(STORE_KEY);
+    if(raw){
+      // 本地已有数据：仅当本地缺少云配置时，从仓库补齐云配置（保留本地订单/库存，不覆盖）
+      let local = null;
+      try{ local = JSON.parse(raw); }catch(e){}
+      if(local && local.goods && (!local.settings || !local.settings.cloud || !local.settings.cloud.url)){
+        if(!local.settings) local.settings = seedStore().settings;
+        local.settings.cloud = data.settings.cloud;
+        if(!local.orders) local.orders = [];
+        store = local;
+        saveStore();
+        refresh();
+      }
+      // 本地已有云配置则保持用户自定义，不做任何覆盖
+    } else {
+      // 全新设备：使用仓库数据（含云配置）作为初始数据
       store = data;
       saveStore();
       refresh();
@@ -683,10 +698,19 @@ async function initCloud(){
   if(!cloudCfg()) return;
   const remote = await cloudPull();
   if(remote && remote.goods){
+    // 云端优先，但合并本地订单，避免覆盖丢失（按订单号去重）
+    if(!remote.settings) remote.settings = seedStore().settings;
+    if(!remote.orders) remote.orders = [];
+    const seen = new Set(), merged = [];
+    remote.orders.concat((store && store.orders) || []).forEach(o=>{
+      if(o && o.no && !seen.has(o.no)){ seen.add(o.no); merged.push(o); }
+    });
+    remote.orders = merged;
     store = remote;
     saveStore();
     refresh();
   } else {
+    // 云端为空：把本地数据推上去作为初始数据
     cloudPush();
   }
 }
@@ -1256,8 +1280,7 @@ function bindGlobal(){
 bindGlobal();
 bindAdminEvents();
 router();
-initCloud();
-loadRemoteSeed();
+loadRemoteSeed().then(initCloud);
 </script>
 </body>
 </html>
