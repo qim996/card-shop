@@ -561,6 +561,24 @@ function saveStore(){
   localStorage.setItem(STORE_KEY, JSON.stringify(store));
   scheduleCloudPush();
 }
+/* ---------- 仓库默认数据（data.json 手动同步） ----------
+   仅当本机从未保存过数据时，拉取仓库里的 data.json 作为初始数据。
+   实现「手动同步」：你改完数据后导出 → 更新仓库 data.json → 其他设备首次打开即为最新数据。 */
+async function loadRemoteSeed(){
+  if(localStorage.getItem(STORE_KEY)) return;
+  try{
+    const r = await fetch('data.json', { cache:'no-cache' });
+    if(!r.ok) return;
+    const data = await r.json();
+    if(data && data.goods){
+      if(!data.settings) data.settings = seedStore().settings;
+      data.settings.cloud = data.settings.cloud || { url:'', key:'', table:'kv' };
+      store = data;
+      saveStore();
+      refresh();
+    }
+  }catch(e){}
+}
 /* ---------- 云同步（Supabase 免费云数据库） ---------- */
 function cloudCfg(){
   const c = store.settings.cloud;
@@ -1134,6 +1152,7 @@ bindGlobal();
 bindAdminEvents();
 router();
 initCloud();
+loadRemoteSeed();
 </script>
 </body>
 </html>

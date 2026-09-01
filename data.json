@@ -1,0 +1,74 @@
+{
+  "settings": {
+    "shopName": "豆铺",
+    "shopDesc": "选购商品，扫码付款，卡密即时发放，全程自动。",
+    "payMode": "demo",
+    "gatewayUrl": "",
+    "adminPwd": "qim996",
+    "cloud": {
+      "url": "",
+      "key": "",
+      "table": "kv"
+    }
+  },
+  "goods": [
+    {
+      "id": "g1",
+      "name": "影音会员 · 周卡",
+      "desc": "主流视频平台会员兑换码，下单秒发",
+      "price": 9.9,
+      "sold": 128,
+      "cards": [
+        "AV-7YQA-X2CD-CR6D-J2D4",
+        "AV-DVHJ-9PRN-TCHE-BBVA",
+        "AV-FR3R-J23T-VLCU-5RJZ",
+        "AV-FH2D-DU9P-6NB4-7AUV",
+        "AV-2N5N-HQX8-4DRH-F2EA",
+        "AV-5H3Y-5WE8-5AKD-528T",
+        "AV-6PEY-8HBE-3XNM-LHQF",
+        "AV-26BM-TXXV-M7RJ-Y6P8"
+      ]
+    },
+    {
+      "id": "g2",
+      "name": "云盘加速 · 月卡",
+      "desc": "高速下载通道月卡，全端通用",
+      "price": 15,
+      "sold": 64,
+      "cards": [
+        "CD-DDG4-QK54-JKST-FPWU",
+        "CD-4M7V-SAVS-68QN-8YW7",
+        "CD-C98E-UUZP-X7MK-YMCM",
+        "CD-V4ZR-VXMR-LW63-W747",
+        "CD-Y6LN-CBRP-KEBK-EXGN",
+        "CD-6B7D-JMU6-MMHA-WRWR",
+        "CD-SKUT-L2W5-UT7Z-8A54",
+        "CD-CCLH-FM2J-RN6X-B5XV"
+      ]
+    },
+    {
+      "id": "g3",
+      "name": "游戏点券 · 1000点",
+      "desc": "游戏平台通用点券卡密，即充即到",
+      "price": 29.9,
+      "sold": 37,
+      "cards": [
+        "GM-VD6G-N5R4-CRL6-9Q9G",
+        "GM-FDHQ-TYZE-EY99-HWRH",
+        "GM-HKAN-LEA3-7G5G-5U73",
+        "GM-TRSC-GKVX-JE3U-DD74",
+        "GM-EPK7-PASG-3V3E-MQNP",
+        "GM-Q7Y3-XNUP-VAC8-QM6C"
+      ]
+    },
+    {
+      "id": "g1788247614482",
+      "name": "藤野豆腐店",
+      "price": 0.01,
+      "desc": "",
+      "sold": 0,
+      "cards": []
+    }
+  ],
+  "orders": []
+}
