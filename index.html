@@ -684,14 +684,17 @@ function demoQR(seedStr){
 }
 /* ---------- 管理页 ---------- */
 let adminAuthed = sessionStorage.getItem('kpu_admin_ok')==='1';
-function ensureAdmin(){
+function requireAdmin(){
   const need = store.settings.adminPwd && store.settings.adminPwd.trim();
   if(need && !adminAuthed){
     openMask($('#pwdMask'));
     $('#pwdInput').focus();
-    return;
+    return false;
   }
-  renderAdmin();
+  return true;
+}
+function ensureAdmin(){
+  if(requireAdmin()) renderAdmin();
 }
 function renderAdmin(tab){
   if(!tab) tab = adminTab();
@@ -868,7 +871,10 @@ function adminSettings(){
 }
 /* ---------- 管理事件绑定（事件委托） ---------- */
 function bindAdminEvents(){
-  $$('.admin-tab').forEach(b=>b.onclick=()=>renderAdmin(b.dataset.atab));
+  $$('.admin-tab').forEach(b=>b.onclick=()=>{
+    if(!requireAdmin()) return;
+    renderAdmin(b.dataset.atab);
+  });
   $('#adminBody').addEventListener('click', e=>{
     const addBtn = e.target.closest('#goodsAdd');
     if(addBtn){ goodsForm(); return; }
@@ -972,7 +978,7 @@ function bindGlobal(){
     }
   };
   $('#pwdInput').addEventListener('keydown', e=>{ if(e.key==='Enter') $('#pwdOk').click(); });
-  $('#pwdMask').addEventListener('click', e=>{ if(e.target===$('#pwdMask')) closeMask($('#pwdMask')); });
+  // 密码弹层不允许点击空白关闭，必须验证口令
   ['checkoutMask','payMask','resultMask'].forEach(id=>{
     $('#'+id).addEventListener('click', e=>{ if(e.target===$('#'+id)) closeMask($('#'+id)); });
   });
