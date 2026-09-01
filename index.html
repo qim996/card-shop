@@ -511,7 +511,7 @@ function genDemoCards(prefix, n){
 }
 function seedStore(){
   return {
-    settings:{ shopName:'卡铺', shopDesc:'选购商品，扫码付款，卡密即时发放，全程自动。', payMode:'demo', gatewayUrl:'', adminPwd:'admin888' },
+    settings:{ shopName:'卡铺', shopDesc:'选购商品，扫码付款，卡密即时发放，全程自动。', payMode:'demo', gatewayUrl:'', adminPwd:'admin888', cloud:{ url:'', key:'', table:'kv' } },
     goods:[
       { id:'g1', name:'影音会员 · 周卡', desc:'主流视频平台会员兑换码，下单秒发', price:9.90, sold:128, cards:genDemoCards('AV-',8) },
       { id:'g2', name:'云盘加速 · 月卡', desc:'高速下载通道月卡，全端通用', price:15.00, sold:64, cards:genDemoCards('CD-',8) },
@@ -526,10 +526,65 @@ function loadStore(){
     if(!raw) return seedStore();
     const data = JSON.parse(raw);
     if(!data || !data.goods) return seedStore();
+    if(!data.settings) data.settings = seedStore().settings;
+    data.settings.cloud = data.settings.cloud || { url:'', key:'', table:'kv' };
     return data;
   }catch(e){ return seedStore(); }
 }
-function saveStore(){ localStorage.setItem(STORE_KEY, JSON.stringify(store)); }
+function saveStore(){
+  localStorage.setItem(STORE_KEY, JSON.stringify(store));
+  scheduleCloudPush();
+}
+/* ---------- 云同步（Supabase 免费云数据库） ---------- */
+function cloudCfg(){
+  const c = store.settings.cloud;
+  if(c && c.url && c.key) return { url:String(c.url).replace(/\/+$/,''), key:c.key, table:(c.table||'kv').trim() || 'kv' };
+  return null;
+}
+async function cloudPull(){
+  const c = cloudCfg(); if(!c) return null;
+  try{
+    const r = await fetch(c.url + '/rest/v1/' + c.table + '?id=eq.store&select=data,updated_at', {
+      headers:{ apikey:c.key, Authorization:'Bearer '+c.key }
+    });
+    if(!r.ok) return null;
+    const rows = await r.json();
+    return (rows && rows[0] && rows[0].data) ? rows[0].data : null;
+  }catch(e){ return null; }
+}
+async function cloudPush(){
+  const c = cloudCfg(); if(!c) return false;
+  try{
+    const body = JSON.stringify({ id:'store', data:JSON.parse(JSON.stringify(store)), updated_at:new Date().toISOString() });
+    const r = await fetch(c.url + '/rest/v1/' + c.table + '?on_conflict=id', {
+      method:'POST',
+      headers:{ apikey:c.key, Authorization:'Bearer '+c.key, 'Content-Type':'application/json', Prefer:'resolution=merge-duplicates' },
+      body
+    });
+    return r.ok;
+  }catch(e){ return false; }
+}
+let cloudTimer = null;
+function scheduleCloudPush(){
+  if(!cloudCfg()) return;
+  clearTimeout(cloudTimer);
+  cloudTimer = setTimeout(()=>{ cloudPush().then(ok=>{ if(!ok) toast('云同步失败，请检查云配置'); }); }, 800);
+}
+function refresh(){
+  if(location.hash.startsWith('#/admin')){ if(requireAdmin()) renderAdmin(); }
+  else renderHome();
+}
+async function initCloud(){
+  if(!cloudCfg()) return;
+  const remote = await cloudPull();
+  if(remote && remote.goods){
+    store = remote;
+    saveStore();
+    refresh();
+  } else {
+    cloudPush();
+  }
+}
 let store = loadStore();
 const cardsLeft = g => g.cards.length;
 /* 莫兰迪大色卡色板（背景, 前景文字） */
@@ -882,6 +937,18 @@ function adminSettings(){
       <input id="sGw" placeholder="https://your-gateway.example.com" value="${esc(s.gatewayUrl)}">
     </div>
   </div>
+  <div class="panel" style="margin-bottom:16px">
+    <div class="panel-head"><h3>云端数据同步（跨设备）</h3></div>
+    <p class="hint" style="margin-bottom:12px">默认数据只保存在<b>本机浏览器</b>，换设备看不到。填入免费的 Supabase 云数据库信息后，商品/卡密/订单/店铺设置将在所有设备间同步。</p>
+    <div class="field"><label>Supabase 项目地址（URL）</label><input id="cUrl" placeholder="https://xxxx.supabase.co" value="${esc(s.cloud.url)}"></div>
+    <div class="field"><label>anon public key</label><input id="cKey" placeholder="eyJhbGciOi..." value="${esc(s.cloud.key)}"></div>
+    <div class="field"><label>数据表名（默认 kv）</label><input id="cTable" value="${esc(s.cloud.table||'kv')}"></div>
+    <div class="row">
+      <button class="btn sm" id="cSave">保存并同步</button>
+      <button class="btn ghost sm" id="cTest">测试连接</button>
+    </div>
+    <p class="hint" style="margin-top:10px">首次使用请先在 Supabase 控制台 SQL Editor 执行建表语句（见交付说明），再点「保存并同步」。</p>
+  </div>
   <div class="panel">
     <div class="panel-head"><h3>安全与其他</h3></div>
     <div class="field"><label>管理口令（留空则不要求口令）</label><input id="sPwd" value="${esc(s.adminPwd||'')}"></div>
@@ -928,6 +995,27 @@ function bindAdminEvents(){
       store.settings.payMode = pm.dataset.pm;
       saveStore();
       renderAdmin('settings');
+      return;
+    }
+    const cSave = e.target.closest('#cSave');
+    if(cSave){
+      const c = store.settings.cloud;
+      c.url = $('#cUrl').value.trim();
+      c.key = $('#cKey').value.trim();
+      c.table = ($('#cTable').value.trim() || 'kv');
+      saveStore();
+      initCloud().then(()=>toast('已保存，正在同步云端'));
+      return;
+    }
+    const cTest = e.target.closest('#cTest');
+    if(cTest){
+      const url = $('#cUrl').value.trim(), key = $('#cKey').value.trim(), tbl = ($('#cTable').value.trim() || 'kv');
+      if(!url || !key){ toast('请先填写 URL 与 key'); return; }
+      const base = url.replace(/\/+$/,'');
+      fetch(base + '/rest/v1/' + tbl + '?id=eq.store&select=data', { headers:{ apikey:key, Authorization:'Bearer '+key } })
+        .then(r=>r.json())
+        .then(rows=>{ toast((rows && rows[0] && rows[0].data) ? '连接成功，已读取云端数据' : '连接成功（云端暂无数据）'); })
+        .catch(()=>toast('连接失败，请检查 URL/Key/表名'));
       return;
     }
     const sv = e.target.closest('#sSave');
@@ -1011,6 +1099,7 @@ function bindGlobal(){
 bindGlobal();
 bindAdminEvents();
 router();
+initCloud();
 </script>
 </body>
 </html>
