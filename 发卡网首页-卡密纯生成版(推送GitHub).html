@@ -1,0 +1,1668 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>卡铺 · 自动发卡</title>
+<link rel="stylesheet" href="https://miaoda.feishu.cn/fonts/css2?family=Noto+Sans+SC:wght@400;500;600;700;900&display=swap">
+<style>
+  :root{
+    --bg:#EEEBE4;
+    --surface:#F7F4ED;
+    --surface-2:#E7E2D8;
+    --primary:#6E7A72;
+    --primary-deep:#59645D;
+    --primary-soft:#DDE2DA;
+    --ink:#3B3A36;
+    --ink-2:#6E6A61;
+    --ink-3:#9A958B;
+    --line:#DDD8CC;
+    --success:#7A8B7D;
+    --success-soft:#E2E8DF;
+    --warn:#A0835A;
+    --warn-soft:#F1E8D8;
+    --danger:#B36B62;
+    --radius:16px;
+    --shadow:0 1px 2px rgba(59,58,54,.05),0 10px 28px -14px rgba(59,58,54,.16);
+    --font:"Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    font-family:var(--font);
+    background:var(--bg);
+    color:var(--ink);
+    line-height:1.6;
+    min-height:100vh;
+  }
+  button{font-family:inherit;cursor:pointer}
+  input,textarea,select{font-family:inherit;font-size:14px;color:var(--ink)}
+  .num{font-variant-numeric:tabular-nums}
+
+  /* ===== 顶栏 ===== */
+  .topbar{
+    position:static;
+    background:transparent;
+  }
+  .topbar-inner{
+    max-width:1080px;margin:0 auto;padding:0 20px;
+    height:60px;display:flex;align-items:center;justify-content:space-between;gap:16px;
+  }
+  .brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink)}
+  .brand-mark{
+    width:34px;height:34px;border-radius:10px;
+    background:linear-gradient(135deg,#8FA094,#6E7A72);
+    display:flex;align-items:center;justify-content:center;color:#fff;flex:none;
+  }
+  .brand-name{font-weight:900;font-size:18px;letter-spacing:.5px}
+  .brand-name small{color:var(--ink-3);font-weight:500;font-size:12px;margin-left:6px}
+  .topnav{display:flex;align-items:center;gap:6px}
+  .topnav a{
+    display:flex;align-items:center;gap:6px;
+    padding:8px 14px;border-radius:10px;
+    font-size:14px;color:var(--ink-2);text-decoration:none;font-weight:500;
+    transition:background .15s,color .15s;
+  }
+  .topnav a:hover{background:var(--surface-2);color:var(--ink)}
+  .topnav a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+
+  /* ===== 主容器 ===== */
+  .wrap{max-width:1080px;margin:0 auto;padding:28px 20px 64px}
+
+  /* ===== Hero ===== */
+  .hero{padding:14px 0 30px}
+  .hero h1{font-size:30px;font-weight:900;letter-spacing:.5px}
+  .hero p{color:var(--ink-2);margin-top:6px;font-size:15px}
+  .back-home{
+    display:inline-flex;align-items:center;gap:6px;margin-top:14px;
+    color:var(--primary);font-size:14px;font-weight:600;text-decoration:none;
+    background:var(--surface);border:1px solid var(--line);border-radius:10px;
+    padding:8px 14px;transition:background .15s;
+  }
+  .back-home:hover{background:var(--primary-soft)}
+  .hero-badge{
+    display:inline-flex;align-items:center;gap:6px;margin-top:14px;
+    background:var(--surface);border:1px solid var(--line);border-radius:999px;
+    padding:6px 14px;font-size:13px;color:var(--ink-2);
+  }
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--success);display:inline-block}
+  .announce{
+    display:flex;align-items:center;gap:8px;margin:0 0 14px;
+    background:linear-gradient(135deg, rgba(158,172,234,.14), rgba(158,172,234,.28));
+    border:1px solid rgba(158,172,234,.5);border-radius:12px;
+    padding:10px 14px;font-size:14px;color:var(--ink);
+  }
+  .announce .announce-ic{font-size:15px;flex:none}
+
+  /* ===== 商品网格 ===== */
+  .section-title{
+    display:flex;align-items:baseline;justify-content:space-between;
+    margin:10px 0 16px;
+  }
+  .section-title h2{font-size:18px;font-weight:700}
+  .section-title span{font-size:13px;color:var(--ink-3)}
+  .goods-grid{
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+    gap:18px;
+  }
+  .card{
+    position:relative;overflow:hidden;
+    background:var(--cbg,#C8C3B8);
+    border-radius:20px;box-shadow:var(--shadow);
+    display:flex;flex-direction:column;padding:0;
+    transition:transform .15s,box-shadow .15s;
+    color:var(--cfg,#4A4742);
+  }
+  .card:hover{transform:translateY(-3px);box-shadow:0 16px 32px -16px rgba(59,58,54,.28)}
+  .card-char{
+    position:absolute;right:-12px;top:-16px;
+    font-size:128px;font-weight:900;line-height:1;opacity:.13;
+    user-select:none;pointer-events:none;
+  }
+  .card-banner{padding:22px 20px 14px;flex:1;position:relative}
+  .card-tag{
+    display:inline-flex;align-items:center;gap:5px;
+    font-size:12px;padding:3px 10px;border-radius:999px;
+    background:rgba(255,255,255,.4);margin-bottom:14px;
+  }
+  .card-name{font-size:20px;font-weight:800;letter-spacing:.3px}
+  .card-desc{opacity:.82;font-size:13.5px;margin-top:5px;min-height:40px}
+  .card-meta{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+  .chip{font-size:12px;padding:3px 10px;border-radius:999px;background:rgba(255,255,255,.45)}
+  .chip.ok{background:rgba(255,255,255,.55)}
+  .chip.warn{background:rgba(255,255,255,.55)}
+  .card-foot{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    padding:16px 20px;
+    background:rgba(255,255,255,.22);
+    border-top:1px solid rgba(255,255,255,.28);
+  }
+  .price{font-size:26px;font-weight:900;color:var(--cfg,#4A4742)}
+  .price small{font-size:13px;font-weight:600;opacity:.7;margin-right:2px}
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:6px;
+    border:none;border-radius:10px;padding:9px 16px;
+    font-size:14px;font-weight:600;color:#fff;background:var(--primary);
+    transition:background .15s,transform .05s;
+    min-height:40px;
+  }
+  .btn:hover{background:var(--primary-deep)}
+  .btn:active{transform:scale(.98)}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .btn.block{width:100%}
+  .btn.ghost{background:transparent;color:var(--ink-2);border:1px solid var(--line)}
+  .btn.ghost:hover{background:var(--surface-2);color:var(--ink)}
+  .btn.sm{padding:6px 12px;font-size:13px;min-height:34px}
+  .btn.danger{background:transparent;color:var(--danger);border:1px solid #F3C8C8}
+  .btn.danger:hover{background:#FEF2F2}
+
+  /* ===== 空态 ===== */
+  .empty{
+    text-align:center;padding:56px 20px;color:var(--ink-3);
+    background:var(--surface);border:1px dashed var(--line);border-radius:var(--radius);
+  }
+  .empty strong{display:block;color:var(--ink-2);font-size:15px;margin-top:10px}
+
+  /* ===== 弹层 ===== */
+  .mask{
+    position:fixed;inset:0;z-index:60;
+    background:rgba(17,24,39,.45);
+    display:none;align-items:center;justify-content:center;
+    padding:20px;
+  }
+  .mask.open{display:flex}
+  .modal{
+    width:100%;max-width:420px;max-height:92vh;overflow:auto;
+    background:var(--surface);border-radius:20px;
+    box-shadow:0 24px 60px -20px rgba(15,23,42,.4);
+    animation:pop .18s ease-out;
+  }
+  @keyframes pop{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:none}}
+  .modal-head{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:18px 20px;border-bottom:1px solid var(--line);
+  }
+  .modal-head h3{font-size:16px;font-weight:700}
+  .icon-btn{
+    width:32px;height:32px;border-radius:8px;border:none;background:transparent;
+    color:var(--ink-3);display:flex;align-items:center;justify-content:center;
+  }
+  .icon-btn:hover{background:var(--surface-2);color:var(--ink)}
+  .modal-body{padding:20px}
+  .confirm-ico{
+    width:48px;height:48px;margin:0 auto 14px;border-radius:50%;
+    background:#FBE9E7;color:var(--danger);
+    display:flex;align-items:center;justify-content:center;
+    font-size:22px;font-weight:900;line-height:1;
+  }
+
+  /* ===== 结算 ===== */
+  .bill-row{display:flex;justify-content:space-between;padding:7px 0;font-size:14px;color:var(--ink-2)}
+  .bill-row.total{color:var(--ink);font-weight:700;font-size:15px;border-top:1px dashed var(--line);margin-top:8px;padding-top:12px}
+  .bill-row.total b{font-size:20px;color:var(--primary);font-weight:900}
+  .qty{
+    display:inline-flex;align-items:center;gap:0;border:1px solid var(--line);border-radius:10px;overflow:hidden;
+  }
+  .qty button{
+    width:38px;height:40px;border:none;background:var(--surface-2);color:var(--ink-2);font-size:18px;
+  }
+  .qty button:hover{background:#EDF1F2;color:var(--ink)}
+  .qty .qty-val{width:52px;text-align:center;font-weight:700;font-size:15px;border:none;background:var(--surface);-moz-appearance:textfield}
+  .qty .qty-val::-webkit-outer-spin-button,.qty .qty-val::-webkit-inner-spin-button{-webkit-appearance:none}
+
+  /* ===== 支付 ===== */
+  .st{font-size:11px;padding:2px 8px;border-radius:999px;font-weight:600;white-space:nowrap}
+  .st-ok{background:rgba(130,170,140,.18);color:#4E7A5C}
+  .st-wait{background:rgba(230,190,140,.22);color:#A57A3C}
+  .st-bad{background:rgba(190,140,140,.18);color:#9A5A52}
+  .order-search{
+    width:100%;max-width:420px;padding:10px 14px;
+    border:1px solid var(--line);border-radius:10px;
+    background:var(--surface);color:var(--ink);outline:none;
+    margin:0 0 18px;font-size:14px;
+  }
+  .order-search:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(130,146,139,.15)}
+  .pay-wrap{text-align:center}
+  .pay-amount{font-size:34px;font-weight:900;color:var(--primary);letter-spacing:.5px}
+  .pay-amount small{font-size:15px;color:var(--ink-3);font-weight:500}
+  .qrcode{
+    width:210px;height:210px;margin:18px auto;
+    border:1px solid var(--line);border-radius:16px;padding:12px;
+    background:#fff;position:relative;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .qrcode img,.qrcode svg,.qrcode canvas{max-width:100%;max-height:100%;display:block;border-radius:6px}
+  .demo-tag{
+    position:absolute;bottom:-10px;left:50%;transform:translateX(-50%);
+    background:var(--warn-soft);color:var(--warn);font-size:11px;font-weight:600;
+    padding:2px 10px;border-radius:999px;white-space:nowrap;
+  }
+  .pay-order{
+    font-size:13px;color:var(--ink-2);background:var(--surface-2);
+    border-radius:8px;padding:8px 12px;display:inline-block;
+  }
+  .pay-tip{font-size:12.5px;color:var(--ink-3);margin-top:12px;line-height:1.7}
+  .pay-actions{display:flex;gap:10px;margin-top:18px}
+  .pay-actions .btn{flex:1}
+  .spinner{
+    width:18px;height:18px;border:2px solid rgba(255,255,255,.4);
+    border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* ===== 票据结果 ===== */
+  .receipt{
+    position:relative;text-align:center;
+    border:1px solid var(--line);border-radius:14px;
+    background:var(--surface-2);
+    padding:22px 18px 20px;
+  }
+  .receipt:before,.receipt:after{
+    content:"";position:absolute;width:26px;height:26px;border-radius:50%;
+    background:var(--surface);border:1px solid var(--line);top:44%;
+  }
+  .receipt:before{left:-14px}
+  .receipt:after{right:-14px}
+  .stamp{
+    display:inline-block;margin-bottom:12px;
+    border:2px solid var(--success);color:var(--success);
+    font-size:13px;font-weight:700;padding:4px 14px;border-radius:6px;
+    transform:rotate(-4deg);letter-spacing:2px;
+  }
+  .receipt-title{font-size:15px;font-weight:700}
+  .receipt-sub{font-size:12.5px;color:var(--ink-3);margin-top:2px}
+  .receipt-dash{border-top:1px dashed var(--line);margin:16px 0}
+  .card-list{display:flex;flex-direction:column;gap:8px}
+  .card-line{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    background:#fff;border:1px solid var(--line);border-radius:10px;
+    padding:9px 12px;
+  }
+  .card-code{
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:14.5px;font-weight:600;color:var(--primary-deep);
+    letter-spacing:1px;user-select:all;
+  }
+  .copy-mini{
+    flex:none;border:none;background:var(--primary-soft);color:var(--primary);
+    font-size:12px;font-weight:600;padding:4px 10px;border-radius:7px;
+  }
+  .copy-mini:hover{background:#D4E8E4}
+  .receipt-foot{font-size:12px;color:var(--ink-3);margin-top:16px}
+
+  /* ===== 管理页 ===== */
+  .admin-tabs{display:flex;gap:6px;border-bottom:1px solid var(--line);margin-bottom:20px;overflow-x:auto}
+  .admin-tab{
+    padding:10px 16px;font-size:14px;border:none;background:transparent;
+    color:var(--ink-2);font-weight:600;border-bottom:2px solid transparent;margin-bottom:-1px;
+    white-space:nowrap;
+  }
+  .admin-tab:hover{color:var(--ink)}
+  .admin-tab.active{color:var(--primary);border-bottom-color:var(--primary)}
+  .panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow)}
+  .panel-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+  .panel-head h3{font-size:16px;font-weight:700}
+  .field{margin-bottom:14px}
+  .field label{display:block;font-size:13px;font-weight:600;color:var(--ink-2);margin-bottom:6px}
+  .field input,.field textarea,.field select{
+    width:100%;border:1px solid var(--line);border-radius:10px;padding:10px 12px;
+    background:var(--surface);transition:border-color .15s,box-shadow .15s;
+  }
+  .field input:focus,.field textarea:focus,.field select:focus{
+    outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(15,118,110,.12);
+  }
+  .field textarea{resize:vertical;min-height:110px}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
+  .row{display:flex;gap:10px;align-items:center}
+  .row .grow{flex:1}
+  .table{width:100%;border-collapse:collapse;font-size:13.5px}
+  .table th{text-align:left;color:var(--ink-3);font-weight:600;font-size:12.5px;padding:8px 10px;border-bottom:1px solid var(--line)}
+  .table td{padding:10px;border-bottom:1px solid #F0F3F4;vertical-align:middle}
+  .table tr:last-child td{border-bottom:none}
+  .table .ops{display:flex;gap:6px;justify-content:flex-end}
+  .hint{font-size:12.5px;color:var(--ink-3);line-height:1.7}
+  .empty-mini{color:var(--ink-3);font-size:13.5px;text-align:center;padding:28px 0}
+  .seg{display:inline-flex;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:3px}
+  .seg button{border:none;background:transparent;padding:7px 14px;border-radius:8px;font-size:13px;color:var(--ink-2);font-weight:600}
+  .seg button.active{background:#fff;color:var(--primary);box-shadow:0 1px 3px rgba(15,23,42,.12)}
+
+  /* ===== Toast ===== */
+  .toast{
+    position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);
+    background:#1F2933;color:#fff;font-size:13.5px;padding:11px 20px;border-radius:12px;
+    opacity:0;pointer-events:none;transition:all .25s;z-index:90;box-shadow:0 10px 30px rgba(15,23,42,.3);
+    display:flex;align-items:center;gap:8px;max-width:88vw;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  .foot{text-align:center;color:var(--ink-3);font-size:12.5px;padding:24px 0 0}
+
+  @media (max-width:640px){
+    .wrap{padding:20px 16px 56px}
+    .hero h1{font-size:24px}
+    .goods-grid{grid-template-columns:1fr}
+    .form-grid{grid-template-columns:1fr}
+    .brand-name small{display:none}
+    .topnav a span{display:none}
+    .topnav a{padding:8px}
+    .pay-amount{font-size:28px}
+  }
+</style>
+<script>var QRCode=(()=>{var g=(n,t)=>()=>(t||n((t={exports:{}}).exports,t),t.exports);var xt=g((Rn,Lt)=>{Lt.exports=function(){return typeof Promise=="function"&&Promise.prototype&&Promise.prototype.then}});var N=g(P=>{var st,De=[0,26,44,70,100,134,172,196,242,292,346,404,466,532,581,655,733,815,901,991,1085,1156,1258,1364,1474,1588,1706,1828,1921,2051,2185,2323,2465,2611,2761,2876,3034,3196,3362,3532,3706];P.getSymbolSize=function(t){if(!t)throw new Error('"version" cannot be null or undefined');if(t<1||t>40)throw new Error('"version" should be in range from 1 to 40');return t*4+17};P.getSymbolTotalCodewords=function(t){return De[t]};P.getBCHDigit=function(n){let t=0;for(;n!==0;)t++,n>>>=1;return t};P.setToSJISFunction=function(t){if(typeof t!="function")throw new Error('"toSJISFunc" is not a valid function.');st=t};P.isKanjiModeEnabled=function(){return typeof st<"u"};P.toSJIS=function(t){return st(t)}});var j=g(m=>{m.L={bit:1};m.M={bit:0};m.Q={bit:3};m.H={bit:2};function Ue(n){if(typeof n!="string")throw new Error("Param is not a string");switch(n.toLowerCase()){case"l":case"low":return m.L;case"m":case"medium":return m.M;case"q":case"quartile":return m.Q;case"h":case"high":return m.H;default:throw new Error("Unknown EC Level: "+n)}}m.isValid=function(t){return t&&typeof t.bit<"u"&&t.bit>=0&&t.bit<4};m.from=function(t,e){if(m.isValid(t))return t;try{return Ue(t)}catch{return e}}});var _t=g((Dn,Ut)=>{function Dt(){this.buffer=[],this.length=0}Dt.prototype={get:function(n){let t=Math.floor(n/8);return(this.buffer[t]>>>7-n%8&1)===1},put:function(n,t){for(let e=0;e<t;e++)this.putBit((n>>>t-e-1&1)===1)},getLengthInBits:function(){return this.length},putBit:function(n){let t=Math.floor(this.length/8);this.buffer.length<=t&&this.buffer.push(0),n&&(this.buffer[t]|=128>>>this.length%8),this.length++}};Ut.exports=Dt});var qt=g((Un,Ft)=>{function k(n){if(!n||n<1)throw new Error("BitMatrix size must be defined and greater than 0");this.size=n,this.data=new Uint8Array(n*n),this.reservedBit=new Uint8Array(n*n)}k.prototype.set=function(n,t,e,r){let o=n*this.size+t;this.data[o]=e,r&&(this.reservedBit[o]=!0)};k.prototype.get=function(n,t){return this.data[n*this.size+t]};k.prototype.xor=function(n,t,e){this.data[n*this.size+t]^=e};k.prototype.isReserved=function(n,t){return this.reservedBit[n*this.size+t]};Ft.exports=k});var kt=g(G=>{var _e=N().getSymbolSize;G.getRowColCoords=function(t){if(t===1)return[];let e=Math.floor(t/7)+2,r=_e(t),o=r===145?26:Math.ceil((r-13)/(2*e-2))*2,i=[r-7];for(let s=1;s<e-1;s++)i[s]=i[s-1]-o;return i.push(6),i.reverse()};G.getPositions=function(t){let e=[],r=G.getRowColCoords(t),o=r.length;for(let i=0;i<o;i++)for(let s=0;s<o;s++)i===0&&s===0||i===0&&s===o-1||i===o-1&&s===0||e.push([r[i],r[s]]);return e}});var Ht=g(Vt=>{var Fe=N().getSymbolSize,zt=7;Vt.getPositions=function(t){let e=Fe(t);return[[0,0],[e-zt,0],[0,e-zt]]}});var Kt=g(d=>{d.Patterns={PATTERN000:0,PATTERN001:1,PATTERN010:2,PATTERN011:3,PATTERN100:4,PATTERN101:5,PATTERN110:6,PATTERN111:7};var b={N1:3,N2:3,N3:40,N4:10};d.isValid=function(t){return t!=null&&t!==""&&!isNaN(t)&&t>=0&&t<=7};d.from=function(t){return d.isValid(t)?parseInt(t,10):void 0};d.getPenaltyN1=function(t){let e=t.size,r=0,o=0,i=0,s=null,u=null;for(let c=0;c<e;c++){o=i=0,s=u=null;for(let l=0;l<e;l++){let a=t.get(c,l);a===s?o++:(o>=5&&(r+=b.N1+(o-5)),s=a,o=1),a=t.get(l,c),a===u?i++:(i>=5&&(r+=b.N1+(i-5)),u=a,i=1)}o>=5&&(r+=b.N1+(o-5)),i>=5&&(r+=b.N1+(i-5))}return r};d.getPenaltyN2=function(t){let e=t.size,r=0;for(let o=0;o<e-1;o++)for(let i=0;i<e-1;i++){let s=t.get(o,i)+t.get(o,i+1)+t.get(o+1,i)+t.get(o+1,i+1);(s===4||s===0)&&r++}return r*b.N2};d.getPenaltyN3=function(t){let e=t.size,r=0,o=0,i=0;for(let s=0;s<e;s++){o=i=0;for(let u=0;u<e;u++)o=o<<1&2047|t.get(s,u),u>=10&&(o===1488||o===93)&&r++,i=i<<1&2047|t.get(u,s),u>=10&&(i===1488||i===93)&&r++}return r*b.N3};d.getPenaltyN4=function(t){let e=0,r=t.data.length;for(let i=0;i<r;i++)e+=t.data[i];return Math.abs(Math.ceil(e*100/r/5)-10)*b.N4};function qe(n,t,e){switch(n){case d.Patterns.PATTERN000:return(t+e)%2===0;case d.Patterns.PATTERN001:return t%2===0;case d.Patterns.PATTERN010:return e%3===0;case d.Patterns.PATTERN011:return(t+e)%3===0;case d.Patterns.PATTERN100:return(Math.floor(t/2)+Math.floor(e/3))%2===0;case d.Patterns.PATTERN101:return t*e%2+t*e%3===0;case d.Patterns.PATTERN110:return(t*e%2+t*e%3)%2===0;case d.Patterns.PATTERN111:return(t*e%3+(t+e)%2)%2===0;default:throw new Error("bad maskPattern:"+n)}}d.applyMask=function(t,e){let r=e.size;for(let o=0;o<r;o++)for(let i=0;i<r;i++)e.isReserved(i,o)||e.xor(i,o,qe(t,i,o))};d.getBestMask=function(t,e){let r=Object.keys(d.Patterns).length,o=0,i=1/0;for(let s=0;s<r;s++){e(s),d.applyMask(s,t);let u=d.getPenaltyN1(t)+d.getPenaltyN2(t)+d.getPenaltyN3(t)+d.getPenaltyN4(t);d.applyMask(s,t),u<i&&(i=u,o=s)}return o}});var ct=g(ut=>{var T=j(),Q=[1,1,1,1,1,1,1,1,1,1,2,2,1,2,2,4,1,2,4,4,2,4,4,4,2,4,6,5,2,4,6,6,2,5,8,8,4,5,8,8,4,5,8,11,4,8,10,11,4,9,12,16,4,9,16,16,6,10,12,18,6,10,17,16,6,11,16,19,6,13,18,21,7,14,21,25,8,16,20,25,8,17,23,25,9,17,23,34,9,18,25,30,10,20,27,32,12,21,29,35,12,23,34,37,12,25,34,40,13,26,35,42,14,28,38,45,15,29,40,48,16,31,43,51,17,33,45,54,18,35,48,57,19,37,51,60,19,38,53,63,20,40,56,66,21,43,59,70,22,45,62,74,24,47,65,77,25,49,68,81],$=[7,10,13,17,10,16,22,28,15,26,36,44,20,36,52,64,26,48,72,88,36,64,96,112,40,72,108,130,48,88,132,156,60,110,160,192,72,130,192,224,80,150,224,264,96,176,260,308,104,198,288,352,120,216,320,384,132,240,360,432,144,280,408,480,168,308,448,532,180,338,504,588,196,364,546,650,224,416,600,700,224,442,644,750,252,476,690,816,270,504,750,900,300,560,810,960,312,588,870,1050,336,644,952,1110,360,700,1020,1200,390,728,1050,1260,420,784,1140,1350,450,812,1200,1440,480,868,1290,1530,510,924,1350,1620,540,980,1440,1710,570,1036,1530,1800,570,1064,1590,1890,600,1120,1680,1980,630,1204,1770,2100,660,1260,1860,2220,720,1316,1950,2310,750,1372,2040,2430];ut.getBlocksCount=function(t,e){switch(e){case T.L:return Q[(t-1)*4+0];case T.M:return Q[(t-1)*4+1];case T.Q:return Q[(t-1)*4+2];case T.H:return Q[(t-1)*4+3];default:return}};ut.getTotalCodewordsCount=function(t,e){switch(e){case T.L:return $[(t-1)*4+0];case T.M:return $[(t-1)*4+1];case T.Q:return $[(t-1)*4+2];case T.H:return $[(t-1)*4+3];default:return}}});var Jt=g(Z=>{var z=new Uint8Array(512),W=new Uint8Array(256);(function(){let t=1;for(let e=0;e<255;e++)z[e]=t,W[t]=e,t<<=1,t&256&&(t^=285);for(let e=255;e<512;e++)z[e]=z[e-255]})();Z.log=function(t){if(t<1)throw new Error("log("+t+")");return W[t]};Z.exp=function(t){return z[t]};Z.mul=function(t,e){return t===0||e===0?0:z[W[t]+W[e]]}});var Yt=g(V=>{var lt=Jt();V.mul=function(t,e){let r=new Uint8Array(t.length+e.length-1);for(let o=0;o<t.length;o++)for(let i=0;i<e.length;i++)r[o+i]^=lt.mul(t[o],e[i]);return r};V.mod=function(t,e){let r=new Uint8Array(t);for(;r.length-e.length>=0;){let o=r[0];for(let s=0;s<e.length;s++)r[s]^=lt.mul(e[s],o);let i=0;for(;i<r.length&&r[i]===0;)i++;r=r.slice(i)}return r};V.generateECPolynomial=function(t){let e=new Uint8Array([1]);for(let r=0;r<t;r++)e=V.mul(e,new Uint8Array([1,lt.exp(r)]));return e}});var Gt=g((Hn,jt)=>{var Ot=Yt();function at(n){this.genPoly=void 0,this.degree=n,this.degree&&this.initialize(this.degree)}at.prototype.initialize=function(t){this.degree=t,this.genPoly=Ot.generateECPolynomial(this.degree)};at.prototype.encode=function(t){if(!this.genPoly)throw new Error("Encoder not initialized");let e=new Uint8Array(t.length+this.degree);e.set(t);let r=Ot.mod(e,this.genPoly),o=this.degree-r.length;if(o>0){let i=new Uint8Array(this.degree);return i.set(r,o),i}return r};jt.exports=at});var ft=g(Qt=>{Qt.isValid=function(t){return!isNaN(t)&&t>=1&&t<=40}});var gt=g(B=>{var $t="[0-9]+",ke="[A-Z $%*+\\-./:]+",H="(?:[u3000-u303F]|[u3040-u309F]|[u30A0-u30FF]|[uFF00-uFFEF]|[u4E00-u9FAF]|[u2605-u2606]|[u2190-u2195]|u203B|[u2010u2015u2018u2019u2025u2026u201Cu201Du2225u2260]|[u0391-u0451]|[u00A7u00A8u00B1u00B4u00D7u00F7])+";H=H.replace(/u/g,"\\u");var ze="(?:(?![A-Z0-9 $%*+\\-./:]|"+H+`)(?:.|[\r
+]))+`;B.KANJI=new RegExp(H,"g");B.BYTE_KANJI=new RegExp("[^A-Z0-9 $%*+\\-./:]+","g");B.BYTE=new RegExp(ze,"g");B.NUMERIC=new RegExp($t,"g");B.ALPHANUMERIC=new RegExp(ke,"g");var Ve=new RegExp("^"+H+"$"),He=new RegExp("^"+$t+"$"),Ke=new RegExp("^[A-Z0-9 $%*+\\-./:]+$");B.testKanji=function(t){return Ve.test(t)};B.testNumeric=function(t){return He.test(t)};B.testAlphanumeric=function(t){return Ke.test(t)}});var M=g(p=>{var Je=ft(),dt=gt();p.NUMERIC={id:"Numeric",bit:1,ccBits:[10,12,14]};p.ALPHANUMERIC={id:"Alphanumeric",bit:2,ccBits:[9,11,13]};p.BYTE={id:"Byte",bit:4,ccBits:[8,16,16]};p.KANJI={id:"Kanji",bit:8,ccBits:[8,10,12]};p.MIXED={bit:-1};p.getCharCountIndicator=function(t,e){if(!t.ccBits)throw new Error("Invalid mode: "+t);if(!Je.isValid(e))throw new Error("Invalid version: "+e);return e>=1&&e<10?t.ccBits[0]:e<27?t.ccBits[1]:t.ccBits[2]};p.getBestModeForData=function(t){return dt.testNumeric(t)?p.NUMERIC:dt.testAlphanumeric(t)?p.ALPHANUMERIC:dt.testKanji(t)?p.KANJI:p.BYTE};p.toString=function(t){if(t&&t.id)return t.id;throw new Error("Invalid mode")};p.isValid=function(t){return t&&t.bit&&t.ccBits};function Ye(n){if(typeof n!="string")throw new Error("Param is not a string");switch(n.toLowerCase()){case"numeric":return p.NUMERIC;case"alphanumeric":return p.ALPHANUMERIC;case"kanji":return p.KANJI;case"byte":return p.BYTE;default:throw new Error("Unknown mode: "+n)}}p.from=function(t,e){if(p.isValid(t))return t;try{return Ye(t)}catch{return e}}});var te=g(R=>{var X=N(),Oe=ct(),Wt=j(),S=M(),ht=ft(),Xt=7973,Zt=X.getBCHDigit(Xt);function je(n,t,e){for(let r=1;r<=40;r++)if(t<=R.getCapacity(r,e,n))return r}function vt(n,t){return S.getCharCountIndicator(n,t)+4}function Ge(n,t){let e=0;return n.forEach(function(r){let o=vt(r.mode,t);e+=o+r.getBitsLength()}),e}function Qe(n,t){for(let e=1;e<=40;e++)if(Ge(n,e)<=R.getCapacity(e,t,S.MIXED))return e}R.from=function(t,e){return ht.isValid(t)?parseInt(t,10):e};R.getCapacity=function(t,e,r){if(!ht.isValid(t))throw new Error("Invalid QR Code version");typeof r>"u"&&(r=S.BYTE);let o=X.getSymbolTotalCodewords(t),i=Oe.getTotalCodewordsCount(t,e),s=(o-i)*8;if(r===S.MIXED)return s;let u=s-vt(r,t);switch(r){case S.NUMERIC:return Math.floor(u/10*3);case S.ALPHANUMERIC:return Math.floor(u/11*2);case S.KANJI:return Math.floor(u/13);case S.BYTE:default:return Math.floor(u/8)}};R.getBestVersionForData=function(t,e){let r,o=Wt.from(e,Wt.M);if(Array.isArray(t)){if(t.length>1)return Qe(t,o);if(t.length===0)return 1;r=t[0]}else r=t;return je(r.mode,r.getLength(),o)};R.getEncodedBits=function(t){if(!ht.isValid(t)||t<7)throw new Error("Invalid QR Code version");let e=t<<12;for(;X.getBCHDigit(e)-Zt>=0;)e^=Xt<<X.getBCHDigit(e)-Zt;return t<<12|e}});var oe=g(re=>{var pt=N(),ne=1335,$e=21522,ee=pt.getBCHDigit(ne);re.getEncodedBits=function(t,e){let r=t.bit<<3|e,o=r<<10;for(;pt.getBCHDigit(o)-ee>=0;)o^=ne<<pt.getBCHDigit(o)-ee;return(r<<10|o)^$e}});var se=g((Gn,ie)=>{var We=M();function D(n){this.mode=We.NUMERIC,this.data=n.toString()}D.getBitsLength=function(t){return 10*Math.floor(t/3)+(t%3?t%3*3+1:0)};D.prototype.getLength=function(){return this.data.length};D.prototype.getBitsLength=function(){return D.getBitsLength(this.data.length)};D.prototype.write=function(t){let e,r,o;for(e=0;e+3<=this.data.length;e+=3)r=this.data.substr(e,3),o=parseInt(r,10),t.put(o,10);let i=this.data.length-e;i>0&&(r=this.data.substr(e),o=parseInt(r,10),t.put(o,i*3+1))};ie.exports=D});var ce=g((Qn,ue)=>{var Ze=M(),wt=["0","1","2","3","4","5","6","7","8","9","A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"," ","$","%","*","+","-",".","/",":"];function U(n){this.mode=Ze.ALPHANUMERIC,this.data=n}U.getBitsLength=function(t){return 11*Math.floor(t/2)+6*(t%2)};U.prototype.getLength=function(){return this.data.length};U.prototype.getBitsLength=function(){return U.getBitsLength(this.data.length)};U.prototype.write=function(t){let e;for(e=0;e+2<=this.data.length;e+=2){let r=wt.indexOf(this.data[e])*45;r+=wt.indexOf(this.data[e+1]),t.put(r,11)}this.data.length%2&&t.put(wt.indexOf(this.data[e]),6)};ue.exports=U});var ae=g(($n,le)=>{"use strict";le.exports=function(t){for(var e=[],r=t.length,o=0;o<r;o++){var i=t.charCodeAt(o);if(i>=55296&&i<=56319&&r>o+1){var s=t.charCodeAt(o+1);s>=56320&&s<=57343&&(i=(i-55296)*1024+s-56320+65536,o+=1)}if(i<128){e.push(i);continue}if(i<2048){e.push(i>>6|192),e.push(i&63|128);continue}if(i<55296||i>=57344&&i<65536){e.push(i>>12|224),e.push(i>>6&63|128),e.push(i&63|128);continue}if(i>=65536&&i<=1114111){e.push(i>>18|240),e.push(i>>12&63|128),e.push(i>>6&63|128),e.push(i&63|128);continue}e.push(239,191,189)}return new Uint8Array(e).buffer}});var ge=g((Wn,fe)=>{var Xe=ae(),ve=M();function _(n){this.mode=ve.BYTE,typeof n=="string"&&(n=Xe(n)),this.data=new Uint8Array(n)}_.getBitsLength=function(t){return t*8};_.prototype.getLength=function(){return this.data.length};_.prototype.getBitsLength=function(){return _.getBitsLength(this.data.length)};_.prototype.write=function(n){for(let t=0,e=this.data.length;t<e;t++)n.put(this.data[t],8)};fe.exports=_});var he=g((Zn,de)=>{var tn=M(),en=N();function F(n){this.mode=tn.KANJI,this.data=n}F.getBitsLength=function(t){return t*13};F.prototype.getLength=function(){return this.data.length};F.prototype.getBitsLength=function(){return F.getBitsLength(this.data.length)};F.prototype.write=function(n){let t;for(t=0;t<this.data.length;t++){let e=en.toSJIS(this.data[t]);if(e>=33088&&e<=40956)e-=33088;else if(e>=57408&&e<=60351)e-=49472;else throw new Error("Invalid SJIS character: "+this.data[t]+`
+Make sure your charset is UTF-8`);e=(e>>>8&255)*192+(e&255),n.put(e,13)}};de.exports=F});var pe=g((Xn,mt)=>{"use strict";var K={single_source_shortest_paths:function(n,t,e){var r={},o={};o[t]=0;var i=K.PriorityQueue.make();i.push(t,0);for(var s,u,c,l,a,w,h,y,A;!i.empty();){s=i.pop(),u=s.value,l=s.cost,a=n[u]||{};for(c in a)a.hasOwnProperty(c)&&(w=a[c],h=l+w,y=o[c],A=typeof o[c]>"u",(A||y>h)&&(o[c]=h,i.push(c,h),r[c]=u))}if(typeof e<"u"&&typeof o[e]>"u"){var I=["Could not find a path from ",t," to ",e,"."].join("");throw new Error(I)}return r},extract_shortest_path_from_predecessor_list:function(n,t){for(var e=[],r=t,o;r;)e.push(r),o=n[r],r=n[r];return e.reverse(),e},find_path:function(n,t,e){var r=K.single_source_shortest_paths(n,t,e);return K.extract_shortest_path_from_predecessor_list(r,e)},PriorityQueue:{make:function(n){var t=K.PriorityQueue,e={},r;n=n||{};for(r in t)t.hasOwnProperty(r)&&(e[r]=t[r]);return e.queue=[],e.sorter=n.sorter||t.default_sorter,e},default_sorter:function(n,t){return n.cost-t.cost},push:function(n,t){var e={value:n,cost:t};this.queue.push(e),this.queue.sort(this.sorter)},pop:function(){return this.queue.shift()},empty:function(){return this.queue.length===0}}};typeof mt<"u"&&(mt.exports=K)});var Ie=g(q=>{var f=M(),ye=se(),Ee=ce(),Ce=ge(),Be=he(),J=gt(),v=N(),nn=pe();function we(n){return unescape(encodeURIComponent(n)).length}function Y(n,t,e){let r=[],o;for(;(o=n.exec(e))!==null;)r.push({data:o[0],index:o.index,mode:t,length:o[0].length});return r}function Ae(n){let t=Y(J.NUMERIC,f.NUMERIC,n),e=Y(J.ALPHANUMERIC,f.ALPHANUMERIC,n),r,o;return v.isKanjiModeEnabled()?(r=Y(J.BYTE,f.BYTE,n),o=Y(J.KANJI,f.KANJI,n)):(r=Y(J.BYTE_KANJI,f.BYTE,n),o=[]),t.concat(e,r,o).sort(function(s,u){return s.index-u.index}).map(function(s){return{data:s.data,mode:s.mode,length:s.length}})}function yt(n,t){switch(t){case f.NUMERIC:return ye.getBitsLength(n);case f.ALPHANUMERIC:return Ee.getBitsLength(n);case f.KANJI:return Be.getBitsLength(n);case f.BYTE:return Ce.getBitsLength(n)}}function rn(n){return n.reduce(function(t,e){let r=t.length-1>=0?t[t.length-1]:null;return r&&r.mode===e.mode?(t[t.length-1].data+=e.data,t):(t.push(e),t)},[])}function on(n){let t=[];for(let e=0;e<n.length;e++){let r=n[e];switch(r.mode){case f.NUMERIC:t.push([r,{data:r.data,mode:f.ALPHANUMERIC,length:r.length},{data:r.data,mode:f.BYTE,length:r.length}]);break;case f.ALPHANUMERIC:t.push([r,{data:r.data,mode:f.BYTE,length:r.length}]);break;case f.KANJI:t.push([r,{data:r.data,mode:f.BYTE,length:we(r.data)}]);break;case f.BYTE:t.push([{data:r.data,mode:f.BYTE,length:we(r.data)}])}}return t}function sn(n,t){let e={},r={start:{}},o=["start"];for(let i=0;i<n.length;i++){let s=n[i],u=[];for(let c=0;c<s.length;c++){let l=s[c],a=""+i+c;u.push(a),e[a]={node:l,lastCount:0},r[a]={};for(let w=0;w<o.length;w++){let h=o[w];e[h]&&e[h].node.mode===l.mode?(r[h][a]=yt(e[h].lastCount+l.length,l.mode)-yt(e[h].lastCount,l.mode),e[h].lastCount+=l.length):(e[h]&&(e[h].lastCount=l.length),r[h][a]=yt(l.length,l.mode)+4+f.getCharCountIndicator(l.mode,t))}}o=u}for(let i=0;i<o.length;i++)r[o[i]].end=0;return{map:r,table:e}}function me(n,t){let e,r=f.getBestModeForData(n);if(e=f.from(t,r),e!==f.BYTE&&e.bit<r.bit)throw new Error('"'+n+'" cannot be encoded with mode '+f.toString(e)+`.
+ Suggested mode is: `+f.toString(r));switch(e===f.KANJI&&!v.isKanjiModeEnabled()&&(e=f.BYTE),e){case f.NUMERIC:return new ye(n);case f.ALPHANUMERIC:return new Ee(n);case f.KANJI:return new Be(n);case f.BYTE:return new Ce(n)}}q.fromArray=function(t){return t.reduce(function(e,r){return typeof r=="string"?e.push(me(r,null)):r.data&&e.push(me(r.data,r.mode)),e},[])};q.fromString=function(t,e){let r=Ae(t,v.isKanjiModeEnabled()),o=on(r),i=sn(o,e),s=nn.find_path(i.map,"start","end"),u=[];for(let c=1;c<s.length-1;c++)u.push(i.table[s[c]].node);return q.fromArray(rn(u))};q.rawSplit=function(t){return q.fromArray(Ae(t,v.isKanjiModeEnabled()))}});var Te=g(Ne=>{var et=N(),Et=j(),un=_t(),cn=qt(),ln=kt(),an=Ht(),At=Kt(),It=ct(),fn=Gt(),tt=te(),gn=oe(),dn=M(),Ct=Ie();function hn(n,t){let e=n.size,r=an.getPositions(t);for(let o=0;o<r.length;o++){let i=r[o][0],s=r[o][1];for(let u=-1;u<=7;u++)if(!(i+u<=-1||e<=i+u))for(let c=-1;c<=7;c++)s+c<=-1||e<=s+c||(u>=0&&u<=6&&(c===0||c===6)||c>=0&&c<=6&&(u===0||u===6)||u>=2&&u<=4&&c>=2&&c<=4?n.set(i+u,s+c,!0,!0):n.set(i+u,s+c,!1,!0))}}function pn(n){let t=n.size;for(let e=8;e<t-8;e++){let r=e%2===0;n.set(e,6,r,!0),n.set(6,e,r,!0)}}function wn(n,t){let e=ln.getPositions(t);for(let r=0;r<e.length;r++){let o=e[r][0],i=e[r][1];for(let s=-2;s<=2;s++)for(let u=-2;u<=2;u++)s===-2||s===2||u===-2||u===2||s===0&&u===0?n.set(o+s,i+u,!0,!0):n.set(o+s,i+u,!1,!0)}}function mn(n,t){let e=n.size,r=tt.getEncodedBits(t),o,i,s;for(let u=0;u<18;u++)o=Math.floor(u/3),i=u%3+e-8-3,s=(r>>u&1)===1,n.set(o,i,s,!0),n.set(i,o,s,!0)}function Bt(n,t,e){let r=n.size,o=gn.getEncodedBits(t,e),i,s;for(i=0;i<15;i++)s=(o>>i&1)===1,i<6?n.set(i,8,s,!0):i<8?n.set(i+1,8,s,!0):n.set(r-15+i,8,s,!0),i<8?n.set(8,r-i-1,s,!0):i<9?n.set(8,15-i-1+1,s,!0):n.set(8,15-i-1,s,!0);n.set(r-8,8,1,!0)}function yn(n,t){let e=n.size,r=-1,o=e-1,i=7,s=0;for(let u=e-1;u>0;u-=2)for(u===6&&u--;;){for(let c=0;c<2;c++)if(!n.isReserved(o,u-c)){let l=!1;s<t.length&&(l=(t[s]>>>i&1)===1),n.set(o,u-c,l),i--,i===-1&&(s++,i=7)}if(o+=r,o<0||e<=o){o-=r,r=-r;break}}}function En(n,t,e){let r=new un;e.forEach(function(c){r.put(c.mode.bit,4),r.put(c.getLength(),dn.getCharCountIndicator(c.mode,n)),c.write(r)});let o=et.getSymbolTotalCodewords(n),i=It.getTotalCodewordsCount(n,t),s=(o-i)*8;for(r.getLengthInBits()+4<=s&&r.put(0,4);r.getLengthInBits()%8!==0;)r.putBit(0);let u=(s-r.getLengthInBits())/8;for(let c=0;c<u;c++)r.put(c%2?17:236,8);return Cn(r,n,t)}function Cn(n,t,e){let r=et.getSymbolTotalCodewords(t),o=It.getTotalCodewordsCount(t,e),i=r-o,s=It.getBlocksCount(t,e),u=r%s,c=s-u,l=Math.floor(r/s),a=Math.floor(i/s),w=a+1,h=l-a,y=new fn(h),A=0,I=new Array(s),bt=new Array(s),rt=0,xe=new Uint8Array(n.buffer);for(let x=0;x<s;x++){let it=x<c?a:w;I[x]=xe.slice(A,A+it),bt[x]=y.encode(I[x]),A+=it,rt=Math.max(rt,it)}let ot=new Uint8Array(r),Rt=0,E,C;for(E=0;E<rt;E++)for(C=0;C<s;C++)E<I[C].length&&(ot[Rt++]=I[C][E]);for(E=0;E<h;E++)for(C=0;C<s;C++)ot[Rt++]=bt[C][E];return ot}function Bn(n,t,e,r){let o;if(Array.isArray(n))o=Ct.fromArray(n);else if(typeof n=="string"){let l=t;if(!l){let a=Ct.rawSplit(n);l=tt.getBestVersionForData(a,e)}o=Ct.fromString(n,l||40)}else throw new Error("Invalid data");let i=tt.getBestVersionForData(o,e);if(!i)throw new Error("The amount of data is too big to be stored in a QR Code");if(!t)t=i;else if(t<i)throw new Error(`
+The chosen QR Code version cannot contain this amount of data.
+Minimum version required to store current data is: `+i+`.
+`);let s=En(t,e,o),u=et.getSymbolSize(t),c=new cn(u);return hn(c,t),pn(c),wn(c,t),Bt(c,e,0),t>=7&&mn(c,t),yn(c,s),isNaN(r)&&(r=At.getBestMask(c,Bt.bind(null,c,e))),At.applyMask(r,c),Bt(c,e,r),{modules:c,version:t,errorCorrectionLevel:e,maskPattern:r,segments:o}}Ne.create=function(t,e){if(typeof t>"u"||t==="")throw new Error("No input text");let r=Et.M,o,i;return typeof e<"u"&&(r=Et.from(e.errorCorrectionLevel,Et.M),o=tt.from(e.version),i=At.from(e.maskPattern),e.toSJISFunc&&et.setToSJISFunction(e.toSJISFunc)),Bn(t,o,r,i)}});var Nt=g(L=>{function Me(n){if(typeof n=="number"&&(n=n.toString()),typeof n!="string")throw new Error("Color should be defined as hex string");let t=n.slice().replace("#","").split("");if(t.length<3||t.length===5||t.length>8)throw new Error("Invalid hex color: "+n);(t.length===3||t.length===4)&&(t=Array.prototype.concat.apply([],t.map(function(r){return[r,r]}))),t.length===6&&t.push("F","F");let e=parseInt(t.join(""),16);return{r:e>>24&255,g:e>>16&255,b:e>>8&255,a:e&255,hex:"#"+t.slice(0,6).join("")}}L.getOptions=function(t){t||(t={}),t.color||(t.color={});let e=typeof t.margin>"u"||t.margin===null||t.margin<0?4:t.margin,r=t.width&&t.width>=21?t.width:void 0,o=t.scale||4;return{width:r,scale:r?4:o,margin:e,color:{dark:Me(t.color.dark||"#000000ff"),light:Me(t.color.light||"#ffffffff")},type:t.type,rendererOpts:t.rendererOpts||{}}};L.getScale=function(t,e){return e.width&&e.width>=t+e.margin*2?e.width/(t+e.margin*2):e.scale};L.getImageWidth=function(t,e){let r=L.getScale(t,e);return Math.floor((t+e.margin*2)*r)};L.qrToImageData=function(t,e,r){let o=e.modules.size,i=e.modules.data,s=L.getScale(o,r),u=Math.floor((o+r.margin*2)*s),c=r.margin*s,l=[r.color.light,r.color.dark];for(let a=0;a<u;a++)for(let w=0;w<u;w++){let h=(a*u+w)*4,y=r.color.light;if(a>=c&&w>=c&&a<u-c&&w<u-c){let A=Math.floor((a-c)/s),I=Math.floor((w-c)/s);y=l[i[A*o+I]?1:0]}t[h++]=y.r,t[h++]=y.g,t[h++]=y.b,t[h]=y.a}}});var Se=g(nt=>{var Tt=Nt();function An(n,t,e){n.clearRect(0,0,t.width,t.height),t.style||(t.style={}),t.height=e,t.width=e,t.style.height=e+"px",t.style.width=e+"px"}function In(){try{return document.createElement("canvas")}catch{throw new Error("You need to specify a canvas element")}}nt.render=function(t,e,r){let o=r,i=e;typeof o>"u"&&(!e||!e.getContext)&&(o=e,e=void 0),e||(i=In()),o=Tt.getOptions(o);let s=Tt.getImageWidth(t.modules.size,o),u=i.getContext("2d"),c=u.createImageData(s,s);return Tt.qrToImageData(c.data,t,o),An(u,i,s),u.putImageData(c,0,0),i};nt.renderToDataURL=function(t,e,r){let o=r;typeof o>"u"&&(!e||!e.getContext)&&(o=e,e=void 0),o||(o={});let i=nt.render(t,e,o),s=o.type||"image/png",u=o.rendererOpts||{};return i.toDataURL(s,u.quality)}});var Re=g(be=>{var Nn=Nt();function Pe(n,t){let e=n.a/255,r=t+'="'+n.hex+'"';return e<1?r+" "+t+'-opacity="'+e.toFixed(2).slice(1)+'"':r}function Mt(n,t,e){let r=n+t;return typeof e<"u"&&(r+=" "+e),r}function Tn(n,t,e){let r="",o=0,i=!1,s=0;for(let u=0;u<n.length;u++){let c=Math.floor(u%t),l=Math.floor(u/t);!c&&!i&&(i=!0),n[u]?(s++,u>0&&c>0&&n[u-1]||(r+=i?Mt("M",c+e,.5+l+e):Mt("m",o,0),o=0,i=!1),c+1<t&&n[u+1]||(r+=Mt("h",s),s=0)):o++}return r}be.render=function(t,e,r){let o=Nn.getOptions(e),i=t.modules.size,s=t.modules.data,u=i+o.margin*2,c=o.color.light.a?"<path "+Pe(o.color.light,"fill")+' d="M0 0h'+u+"v"+u+'H0z"/>':"",l="<path "+Pe(o.color.dark,"stroke")+' d="'+Tn(s,i,o.margin)+'"/>',a='viewBox="0 0 '+u+" "+u+'"',h='<svg xmlns="http://www.w3.org/2000/svg" '+(o.width?'width="'+o.width+'" height="'+o.width+'" ':"")+a+' shape-rendering="crispEdges">'+c+l+`</svg>
+`;return typeof r=="function"&&r(null,h),h}});var Pn=g(O=>{var Mn=xt(),St=Te(),Le=Se(),Sn=Re();function Pt(n,t,e,r,o){let i=[].slice.call(arguments,1),s=i.length,u=typeof i[s-1]=="function";if(!u&&!Mn())throw new Error("Callback required as last argument");if(u){if(s<2)throw new Error("Too few arguments provided");s===2?(o=e,e=t,t=r=void 0):s===3&&(t.getContext&&typeof o>"u"?(o=r,r=void 0):(o=r,r=e,e=t,t=void 0))}else{if(s<1)throw new Error("Too few arguments provided");return s===1?(e=t,t=r=void 0):s===2&&!t.getContext&&(r=e,e=t,t=void 0),new Promise(function(c,l){try{let a=St.create(e,r);c(n(a,t,r))}catch(a){l(a)}})}try{let c=St.create(e,r);o(null,n(c,t,r))}catch(c){o(c)}}O.create=St.create;O.toCanvas=Pt.bind(null,Le.render);O.toDataURL=Pt.bind(null,Le.renderToDataURL);O.toString=Pt.bind(null,function(n,t,e){return Sn.render(n,e)})});return Pn();})();
+</script>
+</head>
+<body>
+
+<!-- ===== 顶栏 ===== -->
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="#/">
+      <span class="brand-mark">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      </span>
+      <span class="brand-name" id="brandName">卡铺<small>自动发卡</small></span>
+    </a>
+    <nav class="topnav">
+      <a href="#/order" data-nav="order">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        <span>订单查询</span>
+      </a>
+      <a href="#/admin" data-nav="admin">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
+        <span>管理</span>
+      </a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- ===== 首页 ===== -->
+  <section data-route="home">
+    <div class="hero">
+      <h1>自动发卡 · 秒发到账</h1>
+      <p id="shopDesc">选购商品，扫码付款，卡密即时发放，全程自动。</p>
+      <span class="hero-badge"><span class="dot"></span>下单后自动发卡，请放心购买</span>
+    </div>
+    <div class="announce" id="announceBar" style="display:none"><span class="announce-ic">📢</span><span id="announceText"></span></div>
+    <div class="section-title">
+      <h2>商品列表</h2>
+      <span id="goodsCount"></span>
+    </div>
+    <div class="goods-grid" id="goodsGrid"></div>
+    <div class="empty" id="goodsEmpty" style="display:none">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+      <strong>暂无商品</strong>
+      <p>请在管理页添加商品与卡密</p>
+    </div>
+  </section>
+
+  <!-- ===== 管理页 ===== -->
+  <section data-route="admin">
+    <div class="hero">
+      <h1>店铺管理</h1>
+      <p>管理商品、卡密库存、订单记录与支付设置。</p>
+      <a href="#/" class="back-home">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+        返回首页
+      </a>
+    </div>
+    <div class="admin-tabs">
+      <button class="admin-tab active" data-atab="goods">商品</button>
+      <button class="admin-tab" data-atab="cards">卡密</button>
+      <button class="admin-tab" data-atab="gen">生成卡密</button>
+      <button class="admin-tab" data-atab="orders">订单</button>
+      <button class="admin-tab" data-atab="settings">设置</button>
+    </div>
+    <div id="adminBody"></div>
+  </section>
+
+  <!-- ===== 订单查询页 ===== -->
+  <section data-route="order">
+    <div class="hero">
+      <h1>订单查询</h1>
+      <p>输入订单号或商品名，同时查询本机记录与云端数据库订单。</p>
+      <span class="hero-badge"><span class="dot"></span>本机记录 + 云端数据库双查</span>
+    </div>
+    <input type="search" id="orderSearch" class="order-search" placeholder="🔍 输入订单号或商品名，支持查询云端订单…">
+    <div id="orderList"></div>
+    <div id="orderDBResult" style="margin-top:4px"></div>
+  </section>
+  <div class="foot">卡铺自动发卡 · 纯前端静态部署 · 数据保存在本机浏览器</div>
+</main>
+
+<!-- ===== 结算弹层 ===== -->
+<div class="mask" id="checkoutMask">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>确认订单</h3>
+      <button class="icon-btn" id="checkoutClose">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="bill-row"><span id="coName"></span><span class="num" id="coUnit"></span></div>
+      <div class="bill-row">购买数量
+        <span class="qty">
+          <button id="qtyMinus" aria-label="减少">-</button>
+          <input class="qty-val num" id="qtyVal" type="number" min="1" value="1">
+          <button id="qtyPlus" aria-label="增加">+</button>
+        </span>
+      </div>
+      <div class="bill-row">可用库存 <span class="num" id="coStock"></span></div>
+      <div class="bill-row total">应付金额 <b class="num" id="coTotal"></b></div>
+      <button class="btn block" id="coPay" style="margin-top:18px">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6H9a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2z"/><path d="M7 9h3"/><path d="M7 13h1"/><path d="M4 9H3a1 1 0 0 0-1 1v4a1 1 0 0 0 1 1h1"/></svg>
+        支付宝支付
+      </button>
+      <p class="hint" style="text-align:center;margin-top:12px">付款完成后系统将自动发放卡密</p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 支付弹层 ===== -->
+<div class="mask" id="payMask">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>扫码支付</h3>
+      <button class="icon-btn" id="payClose">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body pay-wrap">
+      <div>应付金额</div>
+      <div class="pay-amount num"><small>¥</small><span id="payAmount"></span></div>
+      <div class="qrcode" id="qrcodeBox"></div>
+      <div class="pay-order num" id="payOrderNo"></div>
+      <p class="pay-tip" id="payTip"></p>
+      <div class="pay-actions">
+        <button class="btn ghost" id="payGo" style="display:none">去支付宝付款</button>
+        <button class="btn ghost" id="payCancel">取消</button>
+        <button class="btn" id="payOk">我已支付</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 发卡结果弹层 ===== -->
+<div class="mask" id="resultMask">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>支付成功</h3>
+      <button class="icon-btn" id="resultClose">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="receipt">
+        <span class="stamp">已 到 账</span>
+        <div class="receipt-title">卡密发放成功</div>
+        <div class="receipt-sub num" id="resultSub"></div>
+        <div class="receipt-dash"></div>
+        <div class="card-list" id="resultCards"></div>
+        <div class="receipt-dash"></div>
+        <div class="receipt-foot num" id="resultFoot"></div>
+      </div>
+      <button class="btn block" id="resultDone" style="margin-top:16px">完成</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 管理口令弹层 ===== -->
+<div class="mask" id="pwdMask">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>管理口令</h3>
+      <button class="icon-btn" id="pwdClose" title="返回首页">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <p class="hint" style="margin-bottom:12px">进入管理页需要口令，可在设置页修改或清空。</p>
+      <div class="field"><input type="password" id="pwdInput" placeholder="请输入管理口令" autocomplete="off"></div>
+      <button class="btn block" id="pwdOk">进入管理</button>
+      <button class="btn ghost block" id="pwdBack" style="margin-top:10px">返回首页</button>
+    </div>
+  </div>
+</div>
+
+<div class="mask" id="confirmMask">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-body" style="text-align:center;padding:28px 24px">
+      <div class="confirm-ico">!</div>
+      <p id="confirmText" style="margin-bottom:22px;line-height:1.8;color:var(--ink-2);font-size:14px"></p>
+      <div style="display:flex;gap:10px">
+        <button class="btn ghost block" id="confirmNo">取消</button>
+        <button class="btn danger block" id="confirmYes">确认</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+/* =========================================================
+   卡铺 · 自动发卡 —— 单文件静态应用
+   数据保存在 localStorage；支付支持「演示模式」与「网关模式」
+   ========================================================= */
+
+/* ---------- 工具 ---------- */
+const $ = (s, el=document) => el.querySelector(s);
+const $$ = (s, el=document) => Array.from(el.querySelectorAll(s));
+const fmtY = n => n.toFixed(2);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid = () => 'FK' + new Date().toISOString().replace(/[-:T]/g,'').slice(0,14) + Math.floor(1000+Math.random()*9000);
+
+function toast(msg){
+  const t = $('#toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => t.classList.remove('show'), 2200);
+}
+function copyText(txt){
+  const done = () => toast('已复制到剪贴板');
+  if (navigator.clipboard && window.isSecureContext){
+    navigator.clipboard.writeText(txt).then(done).catch(()=>fallback());
+  } else fallback();
+  function fallback(){
+    const ta = document.createElement('textarea');
+    ta.value = txt; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.select();
+    try{ document.execCommand('copy'); done(); }catch(e){ toast('复制失败，请手动选择'); }
+    ta.remove();
+  }
+}
+const money = c => '¥' + fmtY(c);
+function openMask(m){ m.classList.add('open'); }
+function closeMask(m){ m.classList.remove('open'); }
+
+/* ---------- 通用确认弹窗（替代原生 confirm） ---------- */
+let confirmCb = null;
+function confirmDialog(msg, cb, btnLabel){
+  $('#confirmText').textContent = msg;
+  $('#confirmYes').textContent = btnLabel || '确认';
+  confirmCb = cb;
+  openMask($('#confirmMask'));
+}
+
+/* ---------- 图标 ---------- */
+const IC = {
+  key: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.6 7.6a5.5 5.5 0 1 1-7.78 7.78 5.5 5.5 0 0 1 7.78-7.78zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>',
+  copy: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>',
+  edit: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z"/></svg>',
+  trash:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>',
+  add: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+  check:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>',
+  search:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>',
+  download:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>'
+};
+
+/* ---------- 数据 ---------- */
+const STORE_KEY = 'kpu_card_shop_v1';
+function genDemoCards(prefix, n){
+  const out = [];
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  for (let i=0;i<n;i++){
+    let s='';
+    for(let j=0;j<4;j++){
+      for(let k=0;k<4;k++) s += chars[Math.floor(Math.random()*chars.length)];
+      if(j<3) s += '-';
+    }
+    out.push(prefix + s);
+  }
+  return out;
+}
+function seedStore(){
+  return {
+    settings:{ shopName:'卡铺', shopDesc:'选购商品，扫码付款，卡密即时发放，全程自动。', announce:'', announceOn:false, deliverTag:'自动发卡', payMode:'demo', gatewayUrl:'', adminPwd:'admin888', cloud:{ url:'', key:'', table:'kv' } },
+    goods:[
+      { id:'g1', name:'影音会员 · 周卡', desc:'主流视频平台会员兑换码，下单秒发', price:9.90, sold:128, cards:genDemoCards('AV-',8) },
+      { id:'g2', name:'云盘加速 · 月卡', desc:'高速下载通道月卡，全端通用', price:15.00, sold:64, cards:genDemoCards('CD-',8) },
+      { id:'g3', name:'游戏点券 · 1000点', desc:'游戏平台通用点券卡密，即充即到', price:29.90, sold:37, cards:genDemoCards('GM-',6) }
+    ],
+    orders:[]
+  };
+}
+function loadStore(){
+  try{
+    const raw = localStorage.getItem(STORE_KEY);
+    if(!raw) return seedStore();
+    const data = JSON.parse(raw);
+    if(!data || !data.goods) return seedStore();
+    if(!data.settings) data.settings = seedStore().settings;
+    data.settings.cloud = data.settings.cloud || { url:'', key:'', table:'kv' };
+    if(!data.orders) data.orders = [];
+    return data;
+  }catch(e){ return seedStore(); }
+}
+function saveStore(){
+  localStorage.setItem(STORE_KEY, JSON.stringify(store));
+  scheduleCloudPush();
+}
+/* ---------- 仓库默认数据（data.json 手动同步） ----------
+   仅当本机从未保存过数据时，拉取仓库里的 data.json 作为初始数据。
+   实现「手动同步」：你改完数据后导出 → 更新仓库 data.json → 其他设备首次打开即为最新数据。 */
+async function loadRemoteSeed(){
+  try{
+    const r = await fetch('data.json', { cache:'no-cache' });
+    if(!r.ok) return;
+    const data = await r.json();
+    if(!data || !data.goods) return;
+    if(!data.settings) data.settings = seedStore().settings;
+    data.settings.cloud = data.settings.cloud || { url:'', key:'', table:'kv' };
+    if(!data.orders) data.orders = [];
+    const raw = localStorage.getItem(STORE_KEY);
+    if(raw){
+      // 本地已有数据：仅当本地缺少云配置时，从仓库补齐云配置（保留本地订单/库存，不覆盖）
+      let local = null;
+      try{ local = JSON.parse(raw); }catch(e){}
+      if(local && local.goods && (!local.settings || !local.settings.cloud || !local.settings.cloud.url)){
+        if(!local.settings) local.settings = seedStore().settings;
+        local.settings.cloud = data.settings.cloud;
+        if(!local.orders) local.orders = [];
+        store = local;
+        saveStore();
+        refresh();
+      }
+      // 本地已有云配置则保持用户自定义，不做任何覆盖
+    } else {
+      // 全新设备：使用仓库数据（含云配置）作为初始数据
+      store = data;
+      saveStore();
+      refresh();
+    }
+  }catch(e){}
+}
+/* ---------- 云同步（Supabase 免费云数据库） ---------- */
+function cloudCfg(){
+  const c = store.settings.cloud;
+  if(c && c.url && c.key) return { url:String(c.url).replace(/\/+$/,''), key:c.key, table:(c.table||'kv').trim() || 'kv' };
+  return null;
+}
+async function cloudPull(){
+  const c = cloudCfg(); if(!c) return null;
+  try{
+    const r = await fetch(c.url + '/rest/v1/' + c.table + '?id=eq.store&select=data,updated_at', {
+      headers:{ apikey:c.key, Authorization:'Bearer '+c.key }
+    });
+    if(!r.ok) return null;
+    const rows = await r.json();
+    return (rows && rows[0] && rows[0].data) ? rows[0].data : null;
+  }catch(e){ return null; }
+}
+async function cloudPush(){
+  const c = cloudCfg(); if(!c) return false;
+  try{
+    const body = JSON.stringify({ id:'store', data:JSON.parse(JSON.stringify(store)), updated_at:new Date().toISOString() });
+    const r = await fetch(c.url + '/rest/v1/' + c.table + '?on_conflict=id', {
+      method:'POST',
+      headers:{ apikey:c.key, Authorization:'Bearer '+c.key, 'Content-Type':'application/json', Prefer:'resolution=merge-duplicates' },
+      body
+    });
+    return r.ok;
+  }catch(e){ return false; }
+}
+let cloudTimer = null;
+function scheduleCloudPush(){
+  if(!cloudCfg()) return;
+  clearTimeout(cloudTimer);
+  cloudTimer = setTimeout(()=>{ cloudPush().then(ok=>{ if(!ok) toast('云同步失败，请检查云配置'); }); }, 800);
+}
+/* 调用支付网关接口：stock / import / list（卡密一律走网关，前端不直连数据库） */
+function callGW(fn, body){
+  const base = store.settings.gatewayUrl;
+  if(!base || !base.trim()) return Promise.reject(new Error('未配置支付网关'));
+  return fetch(base.replace(/\/+$/,'') + '/' + fn, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(body)
+  }).then(r=>r.json());
+}
+/* 云模式下从数据库实时统计库存（经网关） */
+async function refreshStock(){
+  if(!cloudCfg() || !store.settings.gatewayUrl) return;
+  for(const g of store.goods){
+    try{
+      const d = await callGW('stock', { goods_id: g.id });
+      stockCache[g.id] = (d && typeof d.stock==='number') ? d.stock : (g.cards ? g.cards.length : 0);
+    }catch(e){}
+  }
+  refresh();
+}
+function refresh(){
+  const h = location.hash || '#/';
+  const route = h.split('?')[0].slice(2) || 'home';
+  if(route==='admin'){ if(requireAdmin()) renderAdmin(); }
+  else if(route==='order'){ renderOrder(); }
+  else renderHome();
+}
+async function initCloud(){
+  if(!cloudCfg()) return;
+  const remote = await cloudPull();
+  if(remote && remote.goods){
+    // 云端优先，但合并本地订单，避免覆盖丢失（按订单号去重）
+    if(!remote.settings) remote.settings = seedStore().settings;
+    if(!remote.orders) remote.orders = [];
+    const seen = new Set(), merged = [];
+    remote.orders.concat((store && store.orders) || []).forEach(o=>{
+      if(o && o.no && !seen.has(o.no)){ seen.add(o.no); merged.push(o); }
+    });
+    remote.orders = merged;
+    store = remote;
+    if(cloudCfg()) store.goods.forEach(g=>{ delete g.cards; });  // 云模式：卡密不进前端
+    saveStore();
+    refreshStock();
+  } else {
+    // 云端为空：把本地数据推上去作为初始数据
+    cloudPush();
+    refreshStock();
+  }
+}
+let store = loadStore();
+let stockCache = {};
+const cardsLeft = g => (stockCache[g.id] != null) ? stockCache[g.id] : (g.cards ? g.cards.length : 0);
+/* 莫兰迪大色卡色板（背景, 前景文字） */
+const MORANDI = [
+  ['#C8C3B8','#4A4742'],
+  ['#A9B7C6','#313C46'],
+  ['#A8B5A2','#37422F'],
+  ['#C9A9A6','#4A3332'],
+  ['#B9A9B6','#403240'],
+  ['#D6C3A3','#4A3C22'],
+  ['#9FB0B5','#2E3A3D'],
+  ['#C2B0A3','#4A3B2E']
+];
+
+/* ---------- 路由 ---------- */
+function router(){
+  const h = location.hash || '#/';
+  const route = h.split('?')[0].slice(2) || 'home';
+  $$('[data-route]').forEach(s => s.style.display = (s.dataset.route===route) ? '' : 'none');
+  $$('.topnav a').forEach(a => {
+    const target = a.getAttribute('href').slice(2);
+    a.classList.toggle('active', target===route);
+  });
+  if(route==='admin'){ ensureAdmin(); }
+  else if(route==='order'){ renderOrder(); }
+  else { renderHome(); }
+}
+window.addEventListener('hashchange', router);
+/* ---------- 订单查询 ---------- */
+function renderOrder(){
+  const box = $('#orderList'), dbBox = $('#orderDBResult');
+  const sbox = $('#orderSearch');
+  if(sbox && !sbox.dataset.bound){ sbox.dataset.bound = 1; sbox.oninput = ()=>{ renderOrder(); }; }
+  const kw = (sbox && sbox.value || '').trim();
+  const k = kw.toLowerCase();
+  const all = store.orders || [];
+  const orders = all.filter(o=>!k || String(o.no).toLowerCase().includes(k) || String(o.goodsName||'').toLowerCase().includes(k));
+  if(!orders.length){
+    box.innerHTML = all.length
+      ? '<div class="empty"><strong>没有匹配的订单</strong><p>换个订单号或商品名试试；若为云端订单，请在下框查询。</p></div>'
+      : (k ? '<div class="empty"><strong>本机暂无匹配订单</strong><p>正在下方尝试查询云端数据库…</p></div>'
+           : '<div class="empty"><strong>本机暂无订单</strong><p>在本机下单成功后，订单与卡密会显示在这里。</p></div>');
+  } else {
+    box.innerHTML = orders.map(o=>`
+      <div class="panel" style="margin-bottom:16px">
+        <div class="panel-head">
+          <h3>${esc(o.goodsName)} × ${o.qty}</h3>
+          ${o.cards && o.cards.length ? `<button class="btn ghost sm" data-oac="${esc(o.no)}">${IC.copy}复制全部卡密</button>` : ''}
+        </div>
+        <div class="bill-row"><span>订单号</span><span class="num">${esc(o.no)}</span></div>
+        <div class="bill-row"><span>实付金额</span><span class="num">¥${fmtY(o.amount)}</span></div>
+        <div class="bill-row"><span>下单时间</span><span class="num">${new Date(o.time).toLocaleString('zh-CN')}</span></div>
+        ${o.cards && o.cards.length ? `<div class="receipt-dash"></div>
+        <div class="card-list">${o.cards.map(c=>`<div class="card-line"><span class="card-code">${esc(c)}</span><button class="copy-mini" data-copy="${esc(c)}">复制</button></div>`).join('')}</div>` : ''}
+      </div>`).join('');
+  }
+  $$('#orderList [data-copy]').forEach(b=>b.onclick=()=>copyText(b.dataset.copy));
+  $$('#orderList [data-oac]').forEach(b=>b.onclick=()=>{
+    const ord = store.orders.find(x=>x.no===b.dataset.oac);
+    if(ord && ord.cards) copyText(ord.cards.join('\n'));
+  });
+  /* 云端数据库查询：输入完整订单号（FK 开头）时自动查询 */
+  const no = k.replace(/\s/g,'');
+  if(!dbBox) return;
+  if(!/^fk[0-9a-z]+$/i.test(no)){
+    dbBox.innerHTML = '';
+    return;
+  }
+  const base = (store.settings.gatewayUrl || '').replace(/\/+$/,'');
+  if(!base){ dbBox.innerHTML = '<div class="empty-mini">未配置支付网关，无法查询云端订单。</div>'; return; }
+  dbBox.innerHTML = '<div class="empty-mini">正在查询云端数据库…</div>';
+  fetch(base + '/query', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ order_no: no }) })
+    .then(r=>r.json()).then(d=>{
+      if(d && d.code===0){
+        const stMap = { paid:'已支付', pending:'待支付', failed:'失败' };
+        dbBox.innerHTML = `
+          <div class="panel">
+            <div class="panel-head"><h3>云端订单 · ${esc(d.order_no||no)}</h3></div>
+            <div class="bill-row"><span>商品</span><span>${esc(d.goods_name||'')} × ${d.qty||1}</span></div>
+            <div class="bill-row"><span>金额</span><span class="num">¥${fmtY(d.amount||0)}</span></div>
+            <div class="bill-row"><span>状态</span><span class="st ${d.status==='paid'?'st-ok':d.status==='pending'?'st-wait':'st-bad'}">${stMap[d.status]||esc(d.status)}</span></div>
+            ${d.status==='paid' && d.cards && d.cards.length ? `<div class="receipt-dash"></div><div class="card-list">${d.cards.map(c=>`<div class="card-line"><span class="card-code">${esc(c)}</span><button class="copy-mini" data-copy="${esc(c)}">复制</button></div>`).join('')}</div>` : (d.status==='paid' ? '<div class="empty-mini">订单已支付，无卡密记录</div>' : '<div class="hint">订单尚未支付完成，支付后将自动发卡。</div>')}
+          </div>`;
+        $$('#orderDBResult [data-copy]').forEach(b=>b.onclick=()=>copyText(b.dataset.copy));
+      } else {
+        dbBox.innerHTML = '<div class="empty-mini">云端未找到该订单（' + esc(d&&d.msg||'') + '）</div>';
+      }
+    }).catch(()=>{ dbBox.innerHTML = '<div class="empty-mini">无法连接支付网关</div>'; });
+}
+
+/* ---------- 首页 ---------- */
+function renderHome(){
+  $('#brandName').firstChild.textContent = store.settings.shopName;
+  $('#shopDesc').textContent = store.settings.shopDesc || '';
+  const ab = $('#announceBar'), at = $('#announceText');
+  const ann = store.settings.announce || '';
+  if(ab) ab.style.display = (store.settings.announceOn && ann) ? 'flex' : 'none';
+  if(at) at.textContent = ann;
+  const grid = $('#goodsGrid'), empty = $('#goodsEmpty');
+  $('#goodsCount').textContent = '共 ' + store.goods.length + ' 个商品';
+  if(!store.goods.length){ grid.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
+  const deliverTag = store.settings.deliverTag || '自动发卡';
+  grid.innerHTML = store.goods.map((g,i)=>{
+    const left = cardsLeft(g);
+    const soldOut = left<=0;
+    const [cbg,cfg] = MORANDI[((g.color!=null ? g.color : i) % MORANDI.length + MORANDI.length) % MORANDI.length];
+    const ch = (g.name||'?').trim().charAt(0) || '?';
+    return `
+    <div class="card" style="--cbg:${cbg};--cfg:${cfg}">
+      <span class="card-char">${esc(ch)}</span>
+      <div class="card-banner">
+        <span class="card-tag">${soldOut?'暂时缺货':esc(deliverTag)}</span>
+        <div class="card-name">${esc(g.name)}</div>
+        <div class="card-desc">${esc(g.desc||'暂无描述')}</div>
+        <div class="card-meta">
+          <span class="chip">${soldOut?'已售罄':'有货'}</span>
+          <span class="chip">剩余 ${left} 张</span>
+          <span class="chip">已售 ${g.sold||0} 张</span>
+        </div>
+      </div>
+      <div class="card-foot">
+        <div class="price"><small>¥</small><span class="num">${fmtY(g.price)}</span></div>
+        <button class="btn" data-buy="${g.id}" ${soldOut?'disabled':''}>${soldOut?'已售罄':'立即购买'}</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ---------- 结算 ---------- */
+let curGoods = null, curQty = 1;
+function openCheckout(id){
+  const g = store.goods.find(x=>x.id===id);
+  if(!g || cardsLeft(g)<=0){ toast('该商品已售罄'); return; }
+  curGoods = g; curQty = 1;
+  syncCheckout();
+  openMask($('#checkoutMask'));
+}
+function syncCheckout(){
+  $('#coName').textContent = curGoods.name;
+  $('#coUnit').textContent = '¥' + fmtY(curGoods.price) + ' / 张';
+  $('#coStock').textContent = cardsLeft(curGoods) + ' 张';
+  $('#qtyVal').value = curQty;
+  $('#coTotal').textContent = money(curQty * curGoods.price);
+}
+function setQty(n){
+  const max = Math.min(cardsLeft(curGoods), 99);
+  curQty = Math.max(1, Math.min(n, max));
+  if(curGoods && n>max && max>=1) toast('当前库存仅 ' + max + ' 张');
+  syncCheckout();
+}
+
+/* ---------- 支付 ---------- */
+let curOrder = null, payTimer = null;
+function startPay(){
+  const amount = Math.round(curQty * curGoods.price * 100) / 100;
+  curOrder = { no: uid(), goodsId: curGoods.id, name: curGoods.name, qty: curQty, amount, mode: store.settings.payMode, time: Date.now() };
+  closeMask($('#checkoutMask'));
+  $('#payAmount').textContent = fmtY(amount);
+  $('#payOrderNo').textContent = '订单号 ' + curOrder.no;
+  openMask($('#payMask'));
+  if(store.settings.payMode === 'gateway' && store.settings.gatewayUrl){
+    gatewayCreate();
+  } else {
+    demoPay();
+  }
+}
+function demoPay(){
+  $('#qrcodeBox').innerHTML = demoQR(curOrder.no) + '<span class="demo-tag">演示模式 · 模拟收款码</span>';
+  $('#payTip').innerHTML = '当前为<b>演示模式</b>，不会真实扣款。<br>点击「我已支付」即可模拟付款成功并自动发卡。';
+  $('#payOk').style.display = '';
+  $('#payCancel').textContent = '取消';
+}
+function gatewayCreate(){
+  $('#payOk').style.display = 'none';
+  $('#payGo').style.display = 'none';
+  $('#payCancel').textContent = '关闭';
+  $('#qrcodeBox').innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--ink-3);font-size:13px">正在生成收款码…</div>';
+  $('#payTip').innerHTML = '正在向支付宝发起收款…';
+  const base = store.settings.gatewayUrl.replace(/\/+$/,'');
+  fetch(base + '/create', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ goods_id: curOrder.goodsId, qty: curOrder.qty, goods_name: curOrder.name, amount: curOrder.amount })
+  }).then(r=>r.json()).then(d=>{
+    if(d && d.code===0){
+      curOrder.no = d.order_no || curOrder.no;
+      $('#payOrderNo').textContent = '订单号 ' + curOrder.no;
+      if(d.qr_code){
+        showQR(d.qr_code);
+      } else {
+        $('#qrcodeBox').innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--danger);font-size:13px">二维码生成失败</div>';
+      }
+      const jumpUrl = d.qr_code || d.wap_url;
+      const isTouch = (window.innerWidth < 768 || 'ontouchstart' in window);
+      if(jumpUrl && isTouch){
+        $('#payGo').style.display = '';
+        $('#payGo').onclick = ()=>{ window.open(jumpUrl, '_blank'); };
+      }
+      $('#payTip').innerHTML = isTouch
+        ? '请用<b>支付宝 App 扫码</b>付款，或点击下方「去支付宝付款」跳转收银台。<br>付款完成后将自动发卡。'
+        : '请用<b>支付宝 App 扫码</b>付款，付款完成后将自动发卡。';
+      pollPay();
+    } else {
+      $('#qrcodeBox').innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--danger);font-size:13px">收款码生成失败</div>';
+      $('#payTip').innerHTML = (d && d.msg) ? esc(d.msg) : '支付网关返回异常，请检查网关配置。';
+    }
+  }).catch(()=>{
+    $('#qrcodeBox').innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--danger);font-size:13px">无法连接网关</div>';
+    $('#payTip').innerHTML = '无法访问支付网关，请检查「设置」中的网关地址。';
+  });
+}
+function showQR(text){
+  const box = $('#qrcodeBox');
+  box.innerHTML = '';
+  const canvas = document.createElement('canvas');
+  box.appendChild(canvas);
+  if(window.QRCode){
+    QRCode.toCanvas(canvas, text, { width: 200, margin: 1, errorCorrectionLevel: 'M' }, (err)=>{
+      if(err) box.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--danger);font-size:13px">二维码生成失败</div>';
+    });
+  } else {
+    box.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--ink-3);font-size:13px">二维码组件加载失败</div>';
+  }
+}
+function pollPay(){
+  clearInterval(payTimer);
+  payTimer = setInterval(()=>{
+    const base = store.settings.gatewayUrl.replace(/\/+$/,'');
+    fetch(base + '/query', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ order_no: curOrder.no })
+    }).then(r=>r.json()).then(d=>{
+      if(d && d.code===0){
+        if(d.status==='paid'){ clearInterval(payTimer); onPaid(d.cards || []); }
+        else if(d.status==='failed'){ clearInterval(payTimer); toast('支付失败或库存不足'); closeMask($('#payMask')); }
+      }
+    }).catch(()=>{});
+  }, 3000);
+}
+function onPaid(cards){
+  clearInterval(payTimer);
+  closeMask($('#payMask'));
+  // gateway 模式：卡密由后端在收款回调后发放（cards 来自网关）；demo 模式：本地取卡
+  let got = Array.isArray(cards) ? cards.slice() : [];
+  if(!got.length && store.settings.payMode !== 'gateway'){
+    const g = store.goods.find(x=>x.id===curOrder.goodsId);
+    for(let i=0;i<curOrder.qty;i++){
+      if(g && g.cards.length){ got.push(g.cards.shift()); g.sold = (g.sold||0)+1; }
+    }
+  }
+  store.orders.unshift({ no: curOrder.no, goodsName: curOrder.name, qty: curOrder.qty, amount: curOrder.amount, cards: got, time: Date.now() });
+  saveStore();
+  if(!got.length){ toast('未获取到卡密，订单已记录'); return; }
+  $('#resultSub').textContent = curOrder.name + ' × ' + got.length;
+  $('#resultCards').innerHTML = got.map((c,i)=>`
+    <div class="card-line">
+      <span class="card-code">${esc(c)}</span>
+      <button class="copy-mini" data-copy="${esc(c)}">${IC.copy}复制</button>
+    </div>`).join('');
+  $('#resultFoot').textContent = '订单号 ' + curOrder.no + ' · ' + new Date(curOrder.time).toLocaleString('zh-CN');
+  openMask($('#resultMask'));
+}
+/* 演示伪二维码 */
+function demoQR(seedStr){
+  let h = 0;
+  for(let i=0;i<seedStr.length;i++) h = (h*31 + seedStr.charCodeAt(i))>>>0;
+  const rand = () => { h = (h*1103515245+12345)>>>0; return h/4294967296; };
+  const n = 21;
+  let cells='';
+  for(let y=0;y<n;y++){
+    for(let x=0;x<n;x++){
+      const isFinder = (x<7&&y<7)||(x>=n-7&&y<7)||(x<7&&y>=n-7);
+      let on;
+      if(isFinder){
+        const lx = x<7?x:n-1-x, ly = y<7?y:n-1-y;
+        on = (lx===0||lx===6||ly===0||ly===6)||(lx>=2&&lx<=4&&ly>=2&&ly<=4);
+      } else {
+        on = rand()>0.5;
+      }
+      cells += `<rect x="${x}" y="${y}" width="1" height="1" fill="${on?'#111827':'#fff'}"/>`;
+    }
+  }
+  return `<svg viewBox="0 0 ${n} ${n}" shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg">${cells}</svg>`;
+}
+
+/* ---------- 管理页 ---------- */
+let adminAuthed = sessionStorage.getItem('kpu_admin_ok')==='1';
+function requireAdmin(){
+  const need = store.settings.adminPwd && store.settings.adminPwd.trim();
+  if(need && !adminAuthed){
+    openMask($('#pwdMask'));
+    $('#pwdInput').focus();
+    return false;
+  }
+  return true;
+}
+function ensureAdmin(){
+  if(requireAdmin()) renderAdmin();
+}
+function renderAdmin(tab){
+  if(!tab) tab = adminTab();
+  $$('.admin-tab').forEach(b => b.classList.toggle('active', b.dataset.atab===tab));
+  const body = $('#adminBody');
+  if(tab==='goods') body.innerHTML = adminGoods();
+  else if(tab==='cards'){ body.innerHTML = adminCards(); bindCardsPage(); }
+  else if(tab==='gen'){ body.innerHTML = adminGen(); bindGen(); }
+  else if(tab==='orders') body.innerHTML = adminOrders();
+  else body.innerHTML = adminSettings();
+}
+function adminTab(){
+  const a = $('.admin-tab.active');
+  return a ? a.dataset.atab : 'goods';
+}
+
+function adminGoods(){
+  const rows = store.goods.map(g=>`
+    <tr>
+      <td><b>${esc(g.name)}</b><div class="hint">${esc(g.desc||'')}</div></td>
+      <td class="num">¥${fmtY(g.price)}</td>
+      <td class="num">${cardsLeft(g)}</td>
+      <td class="num">${g.sold||0}</td>
+      <td><div class="ops">
+        <button class="btn ghost sm" data-edit="${g.id}">${IC.edit}编辑</button>
+        <button class="btn danger sm" data-del="${g.id}">${IC.trash}</button>
+      </div></td>
+    </tr>`).join('') || '<tr><td colspan="5"><div class="empty-mini">暂无商品</div></td></tr>';
+  return `
+  <div class="panel">
+    <div class="panel-head">
+      <h3>商品管理</h3>
+      <button class="btn sm" id="goodsAdd">${IC.add}新增商品</button>
+    </div>
+    <div style="overflow-x:auto">
+    <table class="table">
+      <thead><tr><th>商品</th><th>价格</th><th>剩余</th><th>已售</th><th style="text-align:right">操作</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    </div>
+  </div>`;
+}
+function goodsForm(id){
+  const g = id ? store.goods.find(x=>x.id===id) : null;
+  const curColor = g && g.color!=null ? g.color : 0;
+  let pendingColor = curColor;
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'position:fixed;inset:0;z-index:400;background:rgba(30,30,30,.45);display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box';
+  wrap.innerHTML = `
+    <div style="background:var(--surface,#fff);border-radius:16px;width:100%;max-width:480px;max-height:88vh;overflow:auto;padding:20px 22px;box-shadow:0 12px 40px rgba(0,0,0,.22);box-sizing:border-box">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <h3 style="margin:0">${g?'编辑商品':'新增商品'}</h3>
+        <button id="fClose" type="button" style="border:0;background:none;font-size:22px;cursor:pointer;line-height:1;color:var(--ink-2,#888)">×</button>
+      </div>
+      <div class="form-grid">
+        <div class="field"><label>商品名称</label><input id="fName" value="${g?esc(g.name):''}" placeholder="如：影音会员周卡"></div>
+        <div class="field"><label>价格（元）</label><input id="fPrice" type="number" min="0.01" step="0.01" value="${g?g.price:''}" placeholder="9.90"></div>
+      </div>
+      <div class="field"><label>商品描述</label><input id="fDesc" value="${g?esc(g.desc||''):''}" placeholder="简短介绍商品"></div>
+      <div class="field"><label>卡片颜色</label>
+        <div id="fColor" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">
+          ${MORANDI.map((c,i)=>`<button type="button" data-ci="${i}" style="width:36px;height:36px;border-radius:10px;background:${c[0]};border:3px solid ${i===curColor?'#3A3A3A':'transparent'};box-shadow:${i===curColor?'0 0 0 2px #fff inset':'none'};cursor:pointer" title="色卡 ${i+1}"></button>`).join('')}
+        </div>
+      </div>
+      ${g?'':'<div class="field"><label>初始卡密（每行一张，可选）</label><textarea id="fCards" placeholder="AV-ABCD-EFGH-IJKL-KMNP"></textarea></div>'}
+      <div class="row" style="justify-content:flex-end;margin-top:6px">
+        <button class="btn ghost sm" id="fCancel">取消</button>
+        <button class="btn sm" id="fSave">${g?'保存修改':'创建商品'}</button>
+      </div>
+    </div>`;
+  document.body.appendChild(wrap);
+  const close = ()=>{ wrap.remove(); };
+  wrap.addEventListener('click', e=>{ if(e.target===wrap) close(); });
+  $('#fClose').onclick = close;
+  $('#fCancel').onclick = close;
+  $$('#fColor [data-ci]').forEach(sw=>sw.onclick=()=>{
+    pendingColor = parseInt(sw.dataset.ci) || 0;
+    $$('#fColor [data-ci]').forEach(x=>{ x.style.borderColor='transparent'; x.style.boxShadow='none'; });
+    sw.style.borderColor='#3A3A3A'; sw.style.boxShadow='0 0 0 2px #fff inset';
+  });
+  $('#fSave').onclick = ()=>{
+    const name = $('#fName').value.trim();
+    const price = parseFloat($('#fPrice').value);
+    const desc = $('#fDesc').value.trim();
+    if(!name){ toast('请填写商品名称'); return; }
+    if(!(price>0)){ toast('请填写正确的价格'); return; }
+    if(g){
+      g.name=name; g.price=price; g.desc=desc; g.color=pendingColor;
+    } else {
+      const cards = $('#fCards').value.split(/\n+/).map(s=>s.trim()).filter(Boolean);
+      store.goods.push({ id:'g'+Date.now(), name, price, desc, color:pendingColor, sold:0, cards });
+    }
+    saveStore(); close(); renderAdmin('goods'); toast(g?'已保存':'已创建');
+  };
+}
+
+function adminCards(){
+  const sel = store.goods.map(g=>`<option value="${g.id}">${esc(g.name)}（剩余 ${cardsLeft(g)} 张）</option>`).join('');
+  return `
+  <div class="panel" style="margin-bottom:16px">
+    <div class="panel-head"><h3>卡密库存</h3></div>
+    <div class="field"><label>选择商品</label><select id="cardGoods">${sel||'<option value="">（先添加商品）</option>'}</select></div>
+    <div id="cardStats" class="hint" style="margin-bottom:14px"></div>
+    <div class="field"><label>批量导入卡密（每行一张）</label><textarea id="cardInput" placeholder="每行输入一张卡密，例如：&#10;AV-ABCD-EFGH-IJKL-KMNP"></textarea></div>
+    <div class="row">
+      <button class="btn" id="cardImport">${IC.add}导入卡密</button>
+      <button class="btn ghost" id="cardView">查看库存明细</button>
+    </div>
+    <div class="hint" style="margin-top:10px">购买成功会自动删除已售卡密；历史遗留的已售卡密也可在明细中勾选或单独删除，订单记录里的卡密永久保留。</div>
+  </div>
+  <div class="panel" id="cardDetail"></div>`;
+}
+function bindCardsPage(){
+  const sel = $('#cardGoods');
+  if(!sel) return;
+  const pwd = ()=> (store.settings.adminPwd && store.settings.adminPwd.trim()) || 'qim996';
+  const refresh = ()=>{
+    const g = store.goods.find(x=>x.id===sel.value);
+    if(!g){ $('#cardStats').textContent=''; return; }
+    if(cloudCfg()){
+      callGW('list', { goods_id: g.id, pwd: pwd() }).then(d=>{
+        const list = d && d.cards;
+        if(Array.isArray(list)){
+          const left = list.filter(c=>!c.sold).length;
+          $('#cardStats').textContent = '剩余库存 ' + left + ' 张（已售卡密已自动删除，订单记录保留）';
+          // 同步下拉框显示的剩余数（与统计一致）
+          [...sel.options].forEach(op=>{ if(op.value===g.id) op.textContent = g.name + '（剩余 ' + left + ' 张）'; });
+        } else {
+          $('#cardStats').textContent = '剩余 ' + cardsLeft(g) + ' 张（云模式，待执行升级 SQL 后显示明细）';
+        }
+      }).catch(()=>{ $('#cardStats').textContent = '剩余 ' + cardsLeft(g) + ' 张'; });
+    } else {
+      $('#cardStats').textContent = '总库存 ' + (g.cards.length + (g.sold||0)) + ' 张 · 已售 ' + (g.sold||0) + ' 张 · 剩余 ' + g.cards.length + ' 张';
+    }
+  };
+  sel.addEventListener('change', refresh);
+  refresh();
+  $('#cardImport').onclick = ()=>{
+    const g = store.goods.find(x=>x.id===sel.value);
+    const list = $('#cardInput').value.split(/\n+/).map(s=>s.trim()).filter(Boolean);
+    if(!g){ toast('请先添加商品'); return; }
+    if(!list.length){ toast('请先粘贴卡密'); return; }
+    if(cloudCfg()){
+      callGW('import', { goods_id: g.id, codes: list, pwd: pwd() })
+        .then(d=>{ toast('已导入 ' + (d && typeof d.imported==='number'?d.imported:0) + ' 张卡密（云）'); renderAdmin('cards'); })
+        .catch(()=>toast('导入失败，请检查网关配置与升级 SQL 是否已执行'));
+    } else {
+      g.cards.push(...list);
+      saveStore(); renderAdmin('cards'); toast('已导入 ' + list.length + ' 张卡密');
+    }
+    refreshStock();  // 同步首页库存显示
+  };
+  $('#cardView').onclick = ()=>{
+    const g = store.goods.find(x=>x.id===sel.value);
+    if(!g) return;
+    if(cloudCfg()){
+      callGW('list', { goods_id: g.id, pwd: pwd() }).then(d=>{
+        const rows = (d && Array.isArray(d.cards)) ? d.cards.filter(c=>!c.sold) : [];
+        $('#cardDetail').innerHTML = rows.length
+          ? `<div class="panel-head"><h3>剩余卡密明细（${rows.length} 张）</h3>
+             <div class="ops"><button class="btn ghost sm" id="cardCopyAll">${IC.copy}全部复制</button><button class="btn ghost sm" id="cardBatchDel" style="color:#B36B62">批量删除</button></div></div>
+             <div class="card-list">${rows.map(c=>`<div class="card-line"><input type="checkbox" class="cd-chk" data-code="${esc(c.code)}"><span class="card-code">${esc(c.code)}</span><button class="copy-mini" data-copy="${esc(c.code)}">复制</button><button class="copy-mini" data-delcard="${esc(c.code)}" style="color:#B36B62">删除</button></div>`).join('')}</div>`
+          : '<div class="empty-mini">该商品暂无未售卡密</div>';
+        $('#cardCopyAll') && ($('#cardCopyAll').onclick = ()=> copyText(rows.map(c=>c.code).join('\n')));
+        $$('#cardDetail [data-copy]').forEach(b=>b.onclick=()=>copyText(b.dataset.copy));
+        $$('#cardDetail [data-delcard]').forEach(b=>b.onclick=()=>{
+          if(!confirm('确定删除卡密「' + b.dataset.delcard + '」？')) return;
+          callGW('delcard', { goods_id: g.id, code: b.dataset.delcard, pwd: pwd() })
+            .then(d=>{ toast(d&&d.msg||'已删除'); refreshStock(); renderAdmin('cards'); })
+            .catch(()=>toast('删除失败'));
+        });
+        $('#cardBatchDel') && ($('#cardBatchDel').onclick = ()=>{
+          const codes = [...$$('#cardDetail .cd-chk:checked')].map(x=>x.dataset.code);
+          if(!codes.length){ toast('请先勾选要删除的卡密'); return; }
+          if(!confirm('确定删除选中的 ' + codes.length + ' 张卡密？')) return;
+          callGW('delcards', { goods_id: g.id, codes, pwd: pwd() })
+            .then(d=>{ toast(d&&d.msg||'已删除'); refreshStock(); renderAdmin('cards'); })
+            .catch(()=>toast('删除失败'));
+        });
+      }).catch(()=>toast('查看失败，请检查云配置与升级 SQL'));
+      return;
+    }
+    $('#cardDetail').innerHTML = g.cards.length
+      ? `<div class="panel-head"><h3>剩余卡密明细（${g.cards.length} 张）</h3><button class="btn ghost sm" id="cardCopyAll">${IC.copy}全部复制</button></div>
+         <div class="card-list">${g.cards.map(c=>`<div class="card-line"><span class="card-code">${esc(c)}</span><button class="copy-mini" data-copy="${esc(c)}">复制</button></div>`).join('')}</div>`
+      : '<div class="empty-mini">该商品暂无剩余卡密</div>';
+    $('#cardCopyAll') && ($('#cardCopyAll').onclick = ()=> copyText(g.cards.join('\n')));
+    $$('#cardDetail [data-copy]').forEach(b=>b.onclick=()=>copyText(b.dataset.copy));
+  };
+}
+
+/* ---------- 批量生成卡密（仅本地缓存，不上传云端） ---------- */
+const GEN_CHARS = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+let genNow = [];   // 仅在内存中显示，不写入任何存储
+function genOne(){
+  let s=''; for(let i=0;i<18;i++) s += GEN_CHARS[Math.floor(Math.random()*GEN_CHARS.length)];
+  return s;
+}
+function genBatch(n){
+  const out = []; const have = new Set();
+  let guard = 0;
+  while(out.length<n && guard<n*50){ const c=genOne(); if(!have.has(c)){ have.add(c); out.push(c); } guard++; }
+  return out;
+}
+function adminGen(){
+  return `
+  <div class="panel" style="margin-bottom:16px">
+    <div class="panel-head"><h3>批量生成卡密</h3></div>
+    <p class="hint" style="margin-bottom:12px">每次生成 <b>18 位</b> 随机卡密（阿拉伯数字 + 大小写字母），批内自动去重。生成数量可自定义（1~5000）。生成的卡密<b>仅显示在页面</b>，不保存任何数据；直接复制后到「卡密」页导入商品即上传云端。</p>
+    <div class="row" style="gap:10px;flex-wrap:wrap;align-items:center">
+      <label style="font-size:14px;color:var(--ink-2);white-space:nowrap">生成数量</label>
+      <input type="number" id="genCount" min="1" max="5000" step="1" value="10" style="width:120px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);outline:none;font-size:14px">
+      <button class="btn" id="genBtn">${IC.add}生成</button>
+      <button class="btn ghost" id="genCopyAll">${IC.copy}全部复制</button>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="panel-head"><h3>本次生成（${genNow.length} 张）</h3></div>
+    ${genNow.length ? `<div class="card-list">${genNow.map(c=>`<div class="card-line"><span class="card-code">${esc(c)}</span><button class="copy-mini" data-copy="${esc(c)}">复制</button></div>`).join('')}</div>`
+      : '<div class="empty-mini">暂无生成结果，输入数量点击「生成」</div>'}
+  </div>`;
+}
+function bindGen(){
+  $('#genBtn').onclick = ()=>{
+    const n = Math.max(1, Math.min(5000, parseInt($('#genCount').value)||1));
+    const out = genBatch(n);
+    if(!out.length){ toast('生成失败，请重试'); return; }
+    genNow = out;
+    renderAdmin('gen');
+    toast('已生成 ' + out.length + ' 张卡密');
+  };
+  $('#genCopyAll').onclick = ()=>{
+    if(!genNow.length){ toast('暂无生成结果'); return; }
+    copyText(genNow.join('\n'));
+    toast('已复制 ' + genNow.length + ' 张');
+  };
+  $$('#adminBody [data-copy]').forEach(b=>b.onclick=()=>copyText(b.dataset.copy));
+}
+
+function adminOrders(){
+  setTimeout(loadDBOrders, 0);
+  return `
+  <div class="panel">
+    <div class="panel-head"><h3>订单记录（数据库 pay_orders）</h3>
+      <div class="ops">
+        <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;margin:0"><input type="checkbox" id="orderCheckAll" style="margin:0"> 全选</label>
+        <button class="btn ghost sm" id="orderBatchDel" style="color:#B36B62">批量删除</button>
+        <button class="btn ghost sm" id="orderRefresh">刷新</button>
+      </div>
+    </div>
+    <div style="overflow-x:auto">
+    <table class="table">
+      <thead><tr><th style="width:30px"></th><th>订单号</th><th>商品</th><th>数量</th><th>金额</th><th>状态</th><th>时间</th><th style="text-align:right">操作</th></tr></thead>
+      <tbody id="dbOrderTbody"><tr><td colspan="8"><div class="empty-mini">正在从数据库加载…</div></td></tr></tbody>
+    </table>
+    </div>
+    <div id="dbPager" style="display:none;margin-top:14px;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap"></div>
+  </div>`;
+}
+let dbOrders = [];
+let dbPage = 1, dbTotal = 0, dbPageSize = 20;
+async function loadDBOrders(page){
+  const tbody = $('#dbOrderTbody');
+  if(!tbody) return;
+  if(page && page>=1) dbPage = page;
+  const base = (store.settings.gatewayUrl || '').replace(/\/+$/,'');
+  const pwd = (store.settings.adminPwd || '').trim() || 'qim996';
+  const pager = $('#dbPager');
+  if(!base){ tbody.innerHTML = '<tr><td colspan="8"><div class="empty-mini">未配置支付网关，无法读取数据库订单。</div></td></tr>'; if(pager) pager.style.display='none'; return; }
+  tbody.innerHTML = '<tr><td colspan="8"><div class="empty-mini">正在加载…</div></td></tr>';
+  try{
+    const r = await fetch(base + '/orders', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ pwd, page: dbPage, pageSize: dbPageSize }) });
+    const d = await r.json();
+    if(d && d.code===0){
+      dbOrders = d.orders || [];
+      dbTotal = d.total || dbOrders.length;
+      const totalPages = Math.max(1, Math.ceil(dbTotal / dbPageSize));
+      if(dbPage > totalPages) dbPage = totalPages;
+      if(!dbOrders.length){ tbody.innerHTML = '<tr><td colspan="8"><div class="empty-mini">数据库暂无订单</div></td></tr>'; if(pager){pager.style.display='none';} return; }
+      const stMap = { paid:'已支付', pending:'待支付', failed:'失败' };
+      tbody.innerHTML = dbOrders.map(o=>`
+        <tr>
+          <td><input type="checkbox" class="ord-chk" data-no="${esc(o.no)}"></td>
+          <td class="num">${esc(o.no)}</td>
+          <td>${esc(o.goodsName)}</td>
+          <td class="num">×${o.qty}</td>
+          <td class="num">¥${fmtY(o.amount)}</td>
+          <td><span class="st ${o.status==='paid'?'st-ok':o.status==='pending'?'st-wait':'st-bad'}">${stMap[o.status]||esc(o.status)}</span></td>
+          <td class="num">${o.time?new Date(o.time).toLocaleString('zh-CN'):''}</td>
+          <td><div class="ops"><button class="btn ghost sm" data-o="${esc(o.no)}">${IC.key}卡密</button></div></td>
+        </tr>`).join('');
+      const ca = $('#orderCheckAll'); if(ca) ca.checked = false;
+      renderDBPager(pager, totalPages);
+    } else {
+      tbody.innerHTML = '<tr><td colspan="8"><div class="empty-mini">' + esc(d&&d.msg||'加载失败') + '</div></td></tr>';
+      if(pager) pager.style.display='none';
+    }
+  }catch(err){
+    tbody.innerHTML = '<tr><td colspan="8"><div class="empty-mini">无法连接支付网关</div></td></tr>';
+    if(pager) pager.style.display='none';
+  }
+}
+function renderDBPager(pager, totalPages){
+  if(!pager) return;
+  if(totalPages<=1){ pager.style.display='none'; pager.innerHTML=''; return; }
+  pager.style.display='flex';
+  let h = '';
+  h += `<button class="btn ghost sm" id="dbPrev" ${dbPage<=1?'disabled style="opacity:.45"':''}>上一页</button>`;
+  h += `<span class="hint" style="margin:0 6px">第 ${dbPage} / ${totalPages} 页 · 共 ${dbTotal} 笔</span>`;
+  h += `<button class="btn ghost sm" id="dbNext" ${dbPage>=totalPages?'disabled style="opacity:.45"':''}>下一页</button>`;
+  pager.innerHTML = h;
+  $('#dbPrev') && ($('#dbPrev').onclick = ()=>{ if(dbPage>1) loadDBOrders(dbPage-1); });
+  $('#dbNext') && ($('#dbNext').onclick = ()=>{ if(dbPage<totalPages) loadDBOrders(dbPage+1); });
+}
+
+function adminSettings(){
+  const s = store.settings;
+  return `
+  <div class="panel" style="margin-bottom:16px">
+    <div class="panel-head"><h3>店铺信息</h3></div>
+    <div class="field"><label>店铺名称</label><input id="sName" value="${esc(s.shopName)}"></div>
+    <div class="field"><label>首页描述</label><input id="sDesc" value="${esc(s.shopDesc)}"></div>
+    <div class="field"><label>首页公告栏内容（留空则隐藏）</label><input id="sAnnounce" value="${esc(s.announce||'')}" placeholder="如：全场卡密秒发，24小时自动发货"></div>
+    <div class="field"><label>公告栏开关</label>
+      <div class="seg" id="annSeg">
+        <button type="button" data-an="1" class="${s.announceOn?'active':''}">开启</button>
+        <button type="button" data-an="0" class="${!s.announceOn?'active':''}">关闭</button>
+      </div>
+    </div>
+    <div class="field"><label>首页卡片标签文案</label><input id="sDeliverTag" value="${esc(s.deliverTag||'自动发卡')}" placeholder="如：自动发卡 / 秒发到账"></div>
+  </div>
+  <div class="panel" style="margin-bottom:16px">
+    <div class="panel-head"><h3>支付设置</h3></div>
+    <div class="field">
+      <label>支付模式</label>
+      <div class="seg" id="paySeg">
+        <button data-pm="demo" class="${s.payMode!=='gateway'?'active':''}">演示模式</button>
+        <button data-pm="gateway" class="${s.payMode==='gateway'?'active':''}">支付宝当面付</button>
+      </div>
+      <p class="hint" style="margin-top:8px">
+        <b>演示模式</b>：不真实扣款，点击「我已支付」即可发卡，适合体验与测试。<br>
+        <b>支付宝当面付</b>：真实收款。支付弹窗显示<b>收款二维码</b>，同时提供「去支付宝付款」<b>跳转按钮</b>（手机网站支付）。收款成功后由<b>支付网关</b>自动发卡。
+      </p>
+    </div>
+    <div class="field" id="gwField" style="${s.payMode==='gateway'?'':'display:none'}">
+      <label>支付网关地址（HTTPS）</label>
+      <input id="sGw" placeholder="https://你的边缘函数公网地址" value="${esc(s.gatewayUrl)}">
+      <p class="hint" style="margin-top:6px">即你的 Supabase 边缘函数公网访问地址（末尾不用加 /create，系统自动拼接）。</p>
+    </div>
+    <div class="field" id="alipayField" style="${s.payMode==='gateway'?'':'display:none'}">
+      <label>支付宝 APPID</label>
+      <input id="sAlipayId" placeholder="支付宝开放平台应用的 AppID" value="${esc((s.alipay&&s.alipay.appId)||'')}">
+    </div>
+    <div class="field" id="alipayPubField" style="${s.payMode==='gateway'?'':'display:none'}">
+      <label>支付宝公钥（-----BEGIN PUBLIC KEY----- ...）</label>
+      <textarea id="sAlipayPub" rows="4" placeholder="粘贴支付宝公钥">${esc((s.alipay&&s.alipay.publicKey)||'')}</textarea>
+      <p class="hint" style="margin-top:6px">
+        <b>重要安全说明</b>：<b>应用私钥</b>不要填在这里（GitHub Pages 源码公开，私钥放前端等于钱会被盗），请把 <b>应用私钥</b> 配置到支付网关边缘函数的 <b>Secret</b> 中（见交付说明第 4 步）。这里只记录 APPID 和支付宝公钥。
+      </p>
+    </div>
+  </div>
+  <div class="panel" style="margin-bottom:16px">
+    <div class="panel-head"><h3>云端数据同步（跨设备）</h3></div>
+    <p class="hint" style="margin-bottom:12px">默认数据只保存在<b>本机浏览器</b>，换设备看不到。填入免费的 Supabase 云数据库信息后，商品/卡密/订单/店铺设置将在所有设备间同步。</p>
+    <div class="field"><label>Supabase 项目地址（URL）</label><input id="cUrl" placeholder="https://xxxx.supabase.co" value="${esc(s.cloud.url)}"></div>
+    <div class="field"><label>anon public key</label><input id="cKey" placeholder="eyJhbGciOi..." value="${esc(s.cloud.key)}"></div>
+    <div class="field"><label>数据表名（默认 kv）</label><input id="cTable" value="${esc(s.cloud.table||'kv')}"></div>
+    <div class="row">
+      <button class="btn sm" id="cSave">保存并同步</button>
+      <button class="btn ghost sm" id="cTest">测试连接</button>
+    </div>
+    <p class="hint" style="margin-top:10px">首次使用请先在 Supabase 控制台 SQL Editor 执行建表语句（见交付说明），再点「保存并同步」。</p>
+  </div>
+  <div class="panel">
+    <div class="panel-head"><h3>安全与其他</h3></div>
+    <div class="field"><label>管理口令（留空则不要求口令）</label><input id="sPwd" value="${esc(s.adminPwd||'')}"></div>
+    <div class="row">
+      <button class="btn ghost sm" id="sExport">${IC.download}导出数据</button>
+      <button class="btn danger sm" id="sReset">恢复演示数据</button>
+      <button class="btn sm" id="sSave">保存设置</button>
+    </div>
+    <p class="hint" style="margin-top:12px">数据保存在当前浏览器的 localStorage 中，清空浏览器数据会丢失。建议定期「导出数据」备份。</p>
+  </div>`;
+}
+
+/* ---------- 管理事件绑定（事件委托） ---------- */
+function bindAdminEvents(){
+  $$('.admin-tab').forEach(b=>b.onclick=()=>{
+    if(!requireAdmin()) return;
+    renderAdmin(b.dataset.atab);
+  });
+  $('#adminBody').addEventListener('click', e=>{
+    const addBtn = e.target.closest('#goodsAdd');
+    if(addBtn){ goodsForm(); return; }
+    const edit = e.target.closest('[data-edit]');
+    if(edit){ goodsForm(edit.dataset.edit); return; }
+    const del = e.target.closest('[data-del]');
+    if(del){
+      const g = store.goods.find(x=>x.id===del.dataset.del);
+      if(g){
+        confirmDialog('确定删除商品「'+g.name+'」及其剩余卡密？', ()=>{
+          store.goods = store.goods.filter(x=>x.id!==g.id);
+          saveStore(); renderAdmin('goods'); toast('已删除');
+        }, '确认删除');
+      }
+      return;
+    }
+    const o = e.target.closest('[data-o]');
+    if(o){
+      const tr = o.closest('tr');
+      const ord = dbOrders.find(x=>x.no===o.dataset.o);
+      // 若该行下方已有展开行则收起
+      const nextTr = tr.nextElementSibling;
+      if(nextTr && nextTr.classList && nextTr.classList.contains('db-card-row')){
+        nextTr.remove(); return;
+      }
+      // 收起其它已展开的行
+      $$('.db-card-row').forEach(r=>r.remove());
+      const content = ord && ord.cards && ord.cards.length
+        ? `<div class="card-list" style="padding:10px 14px">${ord.cards.map(c=>`<div class="card-line"><span class="card-code">${esc(c)}</span><button class="copy-mini" data-copy="${esc(c)}">复制</button></div>`).join('')}</div>`
+        : '<div class="empty-mini">该订单无卡密记录</div>';
+      const ntr = document.createElement('tr');
+      ntr.className = 'db-card-row';
+      ntr.innerHTML = `<td colspan="8"><div class="panel" style="margin:6px 0">${content}</div></td>`;
+      tr.after(ntr);
+      $$('#dbOrderTbody [data-copy]').forEach(b=>b.onclick=()=>copyText(b.dataset.copy));
+      return;
+    }
+    const refresh = e.target.closest('#orderRefresh');
+    if(refresh){ loadDBOrders(); return; }
+    const checkAll = e.target.closest('#orderCheckAll');
+    if(checkAll){
+      $$('.ord-chk').forEach(c=>c.checked = checkAll.checked);
+      return;
+    }
+    const batchDel = e.target.closest('#orderBatchDel');
+    if(batchDel){
+      const nos = $$('.ord-chk').filter(c=>c.checked).map(c=>c.dataset.no);
+      if(!nos.length){ toast('请先勾选要删除的订单'); return; }
+      const base = (store.settings.gatewayUrl || '').replace(/\/+$/,'');
+      const pwd = (store.settings.adminPwd || '').trim() || 'qim996';
+      if(!base){ toast('未配置支付网关'); return; }
+      confirmDialog('确定从数据库删除选中的 ' + nos.length + ' 条订单？不可恢复。', async ()=>{
+        try{
+          const r = await fetch(base + '/orders', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ pwd, action:'del', order_nos: nos }) });
+          const d = await r.json();
+          toast(d && d.code===0 ? d.msg : (d&&d.msg||'删除失败'));
+          loadDBOrders();
+        }catch(err){ toast('无法连接支付网关'); }
+      }, '确认删除');
+      return;
+    }
+    const pm = e.target.closest('[data-pm]');
+    if(pm){
+      store.settings.payMode = pm.dataset.pm;
+      saveStore();
+      renderAdmin('settings');
+      return;
+    }
+    const an = e.target.closest('[data-an]');
+    if(an){
+      $$('#annSeg button').forEach(b=>b.classList.remove('active'));
+      an.classList.add('active');
+      return;
+    }
+    const cSave = e.target.closest('#cSave');
+    if(cSave){
+      const c = store.settings.cloud;
+      c.url = $('#cUrl').value.trim();
+      c.key = $('#cKey').value.trim();
+      c.table = ($('#cTable').value.trim() || 'kv');
+      saveStore();
+      initCloud().then(()=>toast('已保存，正在同步云端'));
+      return;
+    }
+    const cTest = e.target.closest('#cTest');
+    if(cTest){
+      const url = $('#cUrl').value.trim(), key = $('#cKey').value.trim(), tbl = ($('#cTable').value.trim() || 'kv');
+      if(!url || !key){ toast('请先填写 URL 与 key'); return; }
+      const base = url.replace(/\/+$/,'');
+      fetch(base + '/rest/v1/' + tbl + '?id=eq.store&select=data', { headers:{ apikey:key, Authorization:'Bearer '+key } })
+        .then(r=>r.json())
+        .then(rows=>{ toast((rows && rows[0] && rows[0].data) ? '连接成功，已读取云端数据' : '连接成功（云端暂无数据）'); })
+        .catch(()=>toast('连接失败，请检查 URL/Key/表名'));
+      return;
+    }
+    const sv = e.target.closest('#sSave');
+    if(sv){
+      const s = store.settings;
+      s.shopName = $('#sName').value.trim() || '卡铺';
+      s.shopDesc = $('#sDesc').value.trim();
+      s.announce = $('#sAnnounce').value.trim();
+      s.announceOn = !!($('#annSeg button.active') && $('#annSeg button.active').dataset.an === '1');
+      s.deliverTag = $('#sDeliverTag').value.trim() || '自动发卡';
+      s.gatewayUrl = $('#sGw').value.trim();
+      s.payMode = $('#paySeg button.active').dataset.pm;
+      s.adminPwd = $('#sPwd').value.trim();
+      if(!s.alipay) s.alipay = {};
+      s.alipay.appId = $('#sAlipayId').value.trim();
+      s.alipay.publicKey = $('#sAlipayPub').value.trim();
+      saveStore();
+      toast('设置已保存');
+      return;
+    }
+    const ex = e.target.closest('#sExport');
+    if(ex){
+      const blob = new Blob([JSON.stringify(store,null,2)],{type:'application/json'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'card-shop-backup-' + new Date().toISOString().slice(0,10) + '.json';
+      a.click();
+      URL.revokeObjectURL(a.href);
+      toast('已导出备份文件');
+      return;
+    }
+    const rs = e.target.closest('#sReset');
+    if(rs){
+      confirmDialog('将恢复为演示数据，当前商品/卡密/订单将被覆盖，确定？', ()=>{
+        localStorage.removeItem(STORE_KEY);
+        store = seedStore(); saveStore();
+        renderAdmin('settings'); toast('已恢复演示数据');
+      }, '确认恢复');
+      return;
+    }
+  });
+}
+
+/* ---------- 全局事件 ---------- */
+function bindGlobal(){
+  $('#goodsGrid').addEventListener('click', e=>{
+    const b = e.target.closest('[data-buy]');
+    if(b) openCheckout(b.dataset.buy);
+  });
+  $('#checkoutClose').onclick = ()=>closeMask($('#checkoutMask'));
+  $('#qtyMinus').onclick = ()=>setQty(curQty-1);
+  $('#qtyPlus').onclick = ()=>setQty(curQty+1);
+  $('#qtyVal').addEventListener('change', e=>{
+    const v = parseInt(e.target.value,10);
+    setQty(isNaN(v)?1:v);
+  });
+  $('#coPay').onclick = startPay;
+  $('#payClose').onclick = ()=>{ clearInterval(payTimer); closeMask($('#payMask')); };
+  $('#payCancel').onclick = ()=>{ clearInterval(payTimer); closeMask($('#payMask')); };
+  $('#payOk').onclick = ()=>{
+    if(store.settings.payMode==='gateway' && store.settings.gatewayUrl){
+      // 真实支付下「我已支付」作为刷新按钮：重新查询一次支付状态
+      toast('正在确认支付状态…');
+      const base = store.settings.gatewayUrl.replace(/\/+$/,'');
+      fetch(base + '/query', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ order_no: curOrder.no }) })
+        .then(r=>r.json()).then(d=>{
+          if(d && d.code===0 && d.status==='paid'){ clearInterval(payTimer); onPaid(d.cards||[]); }
+          else if(d && d.status==='failed'){ toast('支付失败或库存不足'); clearInterval(payTimer); closeMask($('#payMask')); }
+          else toast('尚未收到付款确认，请稍候再试');
+        }).catch(()=>toast('查询失败，请检查网关'));
+    } else {
+      onPaid();
+    }
+  };
+  $('#resultClose').onclick = ()=>closeMask($('#resultMask'));
+  $('#resultDone').onclick = ()=>closeMask($('#resultMask'));
+  $('#resultCards').addEventListener('click', e=>{
+    const b = e.target.closest('[data-copy]');
+    if(b) copyText(b.dataset.copy);
+  });
+  // 订单查询页为列表渲染（renderOrder 已随路由触发），无需额外绑定
+  $('#pwdOk').onclick = ()=>{
+    if($('#pwdInput').value === store.settings.adminPwd){
+      adminAuthed = true;
+      sessionStorage.setItem('kpu_admin_ok','1');
+      closeMask($('#pwdMask'));
+      renderAdmin();
+    } else {
+      toast('口令不正确');
+    }
+  };
+  $('#pwdInput').addEventListener('keydown', e=>{ if(e.key==='Enter') $('#pwdOk').click(); });
+  // 口令弹窗可直接关闭并返回首页（不输入口令也能退出）
+  function pwdBackHome(){ closeMask($('#pwdMask')); location.hash = '#/'; }
+  $('#pwdClose').onclick = pwdBackHome;
+  $('#pwdBack').onclick = pwdBackHome;
+  // 通用确认弹窗按钮（不允许点击空白关闭，避免误触）
+  $('#confirmNo').onclick = ()=>closeMask($('#confirmMask'));
+  $('#confirmYes').onclick = ()=>{ closeMask($('#confirmMask')); if(confirmCb) confirmCb(); };
+  // 密码弹层不允许点击空白关闭，必须验证口令
+  ['checkoutMask','payMask','resultMask'].forEach(id=>{
+    $('#'+id).addEventListener('click', e=>{ if(e.target===$('#'+id)) closeMask($('#'+id)); });
+  });
+}
+
+/* ---------- 启动 ---------- */
+bindGlobal();
+bindAdminEvents();
+router();
+loadRemoteSeed().then(initCloud);
+</script>
+</body>
+</html>
